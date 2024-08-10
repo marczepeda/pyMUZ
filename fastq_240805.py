@@ -246,7 +246,7 @@ def subscript(df: pd.DataFrame(),tick='before',tick_sub='number'):
 '''
 def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,cols_ord=None,cutoff=0.01,cols_exclude=None,
         file=None,dir=None,color_palette='colorblind',edgecol='black',lw=1,
-        title='',title_size=18,title_weight='bold',
+        figsize=(10,6),title='',title_size=18,title_weight='bold',
         x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,1),x_ticks_rot=0,xticks=[],
         y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,1),y_ticks_rot=0,yticks=[],
         legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0), 
@@ -271,7 +271,7 @@ def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,
 
     p.cat(typ=typ,df=df,x=x,y=y,errorbar=errorbar,cols=cols,cols_ord=cols_ord,cols_exclude=None,
         file=file,dir=dir,color_palette=color_palette,edgecol=edgecol,lw=lw,
-        title=title,title_size=title_size,title_weight=title_weight,
+        figsize=figsize,title=title,title_size=title_size,title_weight=title_weight,
         x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_axis_scale=x_axis_scale,x_axis_dims=x_axis_dims,x_ticks_rot=x_ticks_rot,xticks=xticks,
         y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_axis_scale=y_axis_scale,y_axis_dims=y_axis_dims,y_ticks_rot=y_ticks_rot,yticks=yticks,
         legend_title=legend_title,legend_title_size=legend_size,legend_size=legend_size,legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_items=legend_items, 
@@ -286,7 +286,7 @@ def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,
 '''
 def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None,stys=None,cutoff=0.01,cols_exclude=None,
          file=None,dir=None,color_palette='colorblind',edgecol='black',
-         title='',title_size=18,title_weight='bold',
+         figsize=(10,6),title='',title_size=18,title_weight='bold',
          x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
          y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,100),y_ticks_rot=0,yticks=[],
          legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0),
@@ -300,7 +300,7 @@ def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None
 
     p.scat(typ=typ,df=df,x=x,y=y,cols=cols,cols_ord=cols_ord,cols_exclude=None,
         file=file,dir=dir,color_palette=color_palette,edgecol=edgecol,
-        title=title,title_size=title_size,title_weight=title_weight,
+        figsize=figsize,title=title,title_size=title_size,title_weight=title_weight,
         x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_axis_scale=x_axis_scale,x_axis_dims=x_axis_dims,x_ticks_rot=x_ticks_rot,xticks=xticks,
         y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_axis_scale=y_axis_scale,y_axis_dims=y_axis_dims,y_ticks_rot=y_ticks_rot,yticks=yticks,
         legend_title=legend_title,legend_title_size=legend_size,legend_size=legend_size,legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_items=legend_items, 
@@ -317,7 +317,7 @@ def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None
 def stack(df: pd.DataFrame(),x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],
           file=None,dir=None,color_palette='viridis',
           title='Editing Outcomes',title_size=18,title_weight='bold',
-          x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
+          figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
           y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,
           legend_title='',legend_title_size=12,legend_size=12,
           legend_bbox_to_anchor=(1,1),legend_loc='upper left',**kwargs):
@@ -338,7 +338,7 @@ def stack(df: pd.DataFrame(),x='sample',y='fraction',cols='edit',cutoff=0.01,col
     p.stack(df=df,x=x,y=y,cols=cols,cutoff=cutoff,cols_ord=cols_ord,
           file=file,dir=dir,color_palette=color_palette,
           title=title,title_size=title_size,title_weight=title_weight,
-          x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,
+          figsize=figsize,x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,
           y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_ticks_rot=y_ticks_rot,
           legend_title=legend_title,legend_title_size=legend_title_size,legend_size=legend_size,
           legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,**kwargs)
