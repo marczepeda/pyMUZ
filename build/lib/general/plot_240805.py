@@ -10,7 +10,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import re
 
 # Supporting methods
 ''' re_un_cap: Replace underscores with spaces and capitalizes each word for a given string

@@ -18,10 +18,13 @@ def ord_form(df:pd.DataFrame(),id:str(),seq:str(),suf:str(),pre:str()):
     ord = df[[(pre+id+suf),(pre+seq+suf)]]
     ord = ord.rename(columns={(pre+id+suf):'Oligo Name',(pre+seq+suf):'Sequence'})
     scale = []
+    bp = []
     for s in ord['Sequence']:
         if len(s)<60: scale.append(0.025)
         else: scale.append(0.05)
+        bp.append(s)
     ord['Scale (µmol)']=scale
+    ord['bp']=bp
     return ord
 
 ''' tb: Designs top & bottom oligonucleotides

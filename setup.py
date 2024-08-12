@@ -24,10 +24,11 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Operating System :: OS Independent',
     ],
-    install_requires=["numpy",
-                      "matplotlib",
-                      "seaborn",
-                      "pandas",
-                      "biopython"],
+    install_requires=['numpy',
+                      'matplotlib',
+                      'seaborn',
+                      'pandas',
+                      'biopython',
+                      'csv'],
     python_requires='>=3.10'
 )
