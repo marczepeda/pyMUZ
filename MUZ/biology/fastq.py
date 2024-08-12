@@ -12,8 +12,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from ..general import tidy_240803 as t
-from ..general import plot_240805 as p
+from ..general import tidy as t
+from ..general import plot as p
 
 # Determine editing outcomes & distribution
 ''' get_fastqs: Get fastq files from directory and store records in dataframes in a dictionary
@@ -266,15 +266,16 @@ def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,
             numbers = re.findall(r'\d+\.?\d*', geno)
             if len(numbers)==0: positions.append(100000) # Places WT and Indel at the end
             else: positions.append(sum([int(n) for n in numbers])/len(numbers))
-        assign = dict(zip(positions,genotypes))
-        cols_ord = [assign[key] for key in sorted(assign.keys())]
+        assign = pd.DataFrame({'positions':positions,
+                               'genotypes':genotypes})
+        cols_ord = list(assign.sort_values(by='positions')['genotypes'])
 
     p.cat(typ=typ,df=df,x=x,y=y,errorbar=errorbar,cols=cols,cols_ord=cols_ord,cols_exclude=None,
         file=file,dir=dir,color_palette=color_palette,edgecol=edgecol,lw=lw,
         figsize=figsize,title=title,title_size=title_size,title_weight=title_weight,
         x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_axis_scale=x_axis_scale,x_axis_dims=x_axis_dims,x_ticks_rot=x_ticks_rot,xticks=xticks,
         y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_axis_scale=y_axis_scale,y_axis_dims=y_axis_dims,y_ticks_rot=y_ticks_rot,yticks=yticks,
-        legend_title=legend_title,legend_title_size=legend_size,legend_size=legend_size,legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_items=legend_items, 
+        legend_title=legend_title,legend_title_size=legend_title_size,legend_size=legend_size,legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_items=legend_items, 
         **kwargs)
 
 ''' scat: Creates scatter plot related graphs.
@@ -303,7 +304,7 @@ def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None
         figsize=figsize,title=title,title_size=title_size,title_weight=title_weight,
         x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_axis_scale=x_axis_scale,x_axis_dims=x_axis_dims,x_ticks_rot=x_ticks_rot,xticks=xticks,
         y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_axis_scale=y_axis_scale,y_axis_dims=y_axis_dims,y_ticks_rot=y_ticks_rot,yticks=yticks,
-        legend_title=legend_title,legend_title_size=legend_size,legend_size=legend_size,legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_items=legend_items, 
+        legend_title=legend_title,legend_title_size=legend_title_size,legend_size=legend_size,legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_items=legend_items, 
         **kwargs)
 
 ''' stack: Creates stacked bar plot
@@ -331,8 +332,9 @@ def stack(df: pd.DataFrame(),x='sample',y='fraction',cols='edit',cutoff=0.01,col
             numbers = re.findall(r'\d+\.?\d*', geno)
             if len(numbers)==0: positions.append(100000) # Places WT and Indel at the end
             else: positions.append(sum([int(n) for n in numbers])/len(numbers))
-        assign = dict(zip(positions,genotypes))
-        cols_ord = [assign[key] for key in sorted(assign.keys())]
+        assign = pd.DataFrame({'positions':positions,
+                               'genotypes':genotypes})
+        cols_ord = list(assign.sort_values(by='positions')['genotypes'])
     
     # Make stacked barplot
     p.stack(df=df,x=x,y=y,cols=cols,cutoff=cutoff,cols_ord=cols_ord,
