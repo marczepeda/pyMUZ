@@ -6,11 +6,11 @@ with open('README.md','r') as f:
 setup(
     name='MUZ',
     version='0.0.0',
-    description='/Users/marczepeda/git/python/README.md',
-    package_dir={'general':'src/general',
-                 'biology':'src/biology'
+    description='README.md',
+    package_dir={'general':'MUZ/general',
+                 'biology':'MUZ/biology'
                  },
-    packages=find_packages(where='src',
+    packages=find_packages(where='MUZ',
                            exclude=['old','revise'],
                            include=['general','biology']),
     long_description=long_description,
@@ -29,8 +29,5 @@ setup(
                       "seaborn",
                       "pandas",
                       "biopython"],
-    extras_require={
-        'dev': ['pytest>=7.0', 'twine>=4.0.2'],
-    },
-    python_requires='>=3.10',
+    python_requires='>=3.10'
 )

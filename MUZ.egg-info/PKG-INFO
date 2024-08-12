@@ -1,16 +1,16 @@
 Metadata-Version: 2.1
-Name: python
-Version: 0.0.1
-Summary: Python code for input/output, data wrangling, and generating plots.
+Name: MUZ
+Version: 0.0.0
+Summary: README.md
 Home-page: https://github.com/marczepeda/python
 Author: Marcanthony Zepeda
-Author-email: Marc Zepeda <marczepeda17@gmail.com>
+Author-email: marczepeda17@gmail.com
 License: GPLv3+
-Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Programming Language :: Python :: 3.10
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
-Provides-Extra: dev
 License-File: LICENSE
 
 # Python
