@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "python"
 version = "0.0.1"
 authors = [
-  { name="Marc Zepeda", email="marczepeda17@gmail.com" },
+  { name = "Marc Zepeda", email = "marczepeda17@gmail.com" }
 ]
 description = "Python code for input/output, data wrangling, and generating plots."
 readme = "README.md"
@@ -14,13 +14,12 @@ requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3.0 (GPLv3)",
-    "Operating System :: OS Independent",
+    "Operating System :: OS Independent"
 ]
 dependencies = [
   "numpy",
   "matplotlib",
   "seaborn",
   "pandas",
-  "biopython",
-  "csv"
+  "biopython"
 ]
