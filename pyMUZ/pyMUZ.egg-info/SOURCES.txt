@@ -1,0 +1,15 @@
+LICENSE
+README.md
+setup.py
+pyMUZ/biology/__init__.py
+pyMUZ/biology/clone.py
+pyMUZ/biology/fastq.py
+pyMUZ/general/__init__.py
+pyMUZ/general/io.py
+pyMUZ/general/plot.py
+pyMUZ/general/tidy.py
+pyMUZ/pyMUZ.egg-info/PKG-INFO
+pyMUZ/pyMUZ.egg-info/SOURCES.txt
+pyMUZ/pyMUZ.egg-info/dependency_links.txt
+pyMUZ/pyMUZ.egg-info/requires.txt
+pyMUZ/pyMUZ.egg-info/top_level.txt

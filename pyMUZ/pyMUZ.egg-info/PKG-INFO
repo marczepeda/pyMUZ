@@ -1,15 +1,15 @@
 Metadata-Version: 2.1
-Name: MUZ
-Version: 0.0.0
-Summary: README.md
+Name: pyMUZ
+Version: 0.0.1
+Summary: Python Tools for MUZ
 Home-page: https://github.com/marczepeda/python
 Author: Marcanthony Zepeda
 Author-email: marczepeda17@gmail.com
 License: GPLv3+
 Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
-Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
 Classifier: Operating System :: OS Independent
-Requires-Python: >=3.10
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
