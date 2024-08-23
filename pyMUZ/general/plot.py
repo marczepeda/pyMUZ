@@ -5,7 +5,6 @@
 # Import packages
 import os
 import math
-from collections import OrderedDict, Counter
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
