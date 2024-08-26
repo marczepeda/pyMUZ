@@ -11,7 +11,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, UnexpectedAlertPresentException
 import time
-import io
+from ..gen import io as io
+from ..gen import tidy as t
 
 
 # HTML Methods

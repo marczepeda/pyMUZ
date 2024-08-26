@@ -25,6 +25,8 @@ setup(
                       'matplotlib',
                       'seaborn',
                       'pandas',
-                      'biopython'],
+                      'biopython',
+                      'requests',
+                      'selenium'],
     python_requires='>=3.11'
 )
