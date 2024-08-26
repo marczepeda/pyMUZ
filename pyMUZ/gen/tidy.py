@@ -123,3 +123,39 @@ def merge(data: pd.DataFrame(), meta: pd.DataFrame(), id, cols):
             data[c] = [id_c[i] for i in data[id[0]]]
     else: print("Error: id needs to be string or list of 2 strings")
     return data
+
+# Methods for interconverting dictionaries and lists
+''' dc_to_ls: Convert a dictionary containing several subdictionaries into a list with all the key value relationships stored as individual values
+        dc: dictionary
+        sep: seperator for subdictionaries for values in the list
+'''
+def dc_to_ls(dc: dict(),sep='.'):
+    
+    ls = [] # Initialize final list
+    
+    def recursive_items(dc, sep='', parent_key=''): # Recursive processing submethod
+        for key, value in dc.items():
+            new_key = f"{parent_key}{sep}{key}" if parent_key else key # Construct the key path (optional, depending on whether you want the full key path in tuples)
+            if isinstance(value, dict): recursive_items(value, sep, new_key) # Recursively process the sub-dictionary
+            else: ls.append(f"{new_key}{sep}{value}") # Store the key-value pair as a tuple
+    
+    recursive_items(dc,sep) # Initialized recursive processing
+    return ls
+
+''' ls_to_dc: Convert a dictionary containing several subdictionaries into a list with all the key value relationships stored as individual values
+        ls: list
+        sep: seperator for subdictionaries for values in the list
+'''
+def ls_to_dc(ls: list(), sep='.'):
+
+    dc = {} # Initialize final dict
+
+    for item in ls: # Interate through values in the list
+        key, value = item.rsplit(sep, 1) # Split final key value relationship by the seperator
+        parts = key.split(sep)  # Split the key by the separator
+        d = dc
+        for part in parts[:-1]:
+            d = d.setdefault(part, {})
+        d[parts[-1]] = value.strip()  # Assign the value, strip any leading/trailing whitespace
+
+    return dc

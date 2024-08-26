@@ -12,8 +12,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from ..general import tidy as t
-from ..general import plot as p
+from ..gen import tidy as t
+from ..gen import plot as p
 
 # Determine editing outcomes & distribution
 ''' get_fastqs: Get fastq files from directory and store records in dataframes in a dictionary

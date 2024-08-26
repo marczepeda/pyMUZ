@@ -7,7 +7,38 @@ import pandas as pd
 import json
 import requests
 
-# Supporting methods
+# Series ID methods
+''' series_ids: Returns dataframe containing series ids and corresponding metadata
+        ls: list from dc_to_ls()
+        dropdown_ids: column names
+        sep: seperator from sep (optional, default: '.')
+        exclude: trailing value from dc_to_ls (optional, default: '.None')
+        pre: series id prefix (optional)
+    Dependencies: pandas
+'''
+def series_ids(ls: list(), dropdown_ids: list(), sep='.',exclude='.None', pre=''):
+    
+    # Clean list by removing trailing value (exclude) and truncated series
+    ls = [l.split(exclude)[0] for l in ls]
+    print(f'Removed truncated series: {[l for l in ls if len(l.split(sep))!=len(dropdown_ids)]}')
+    ls = [l for l in ls if len(l.split(sep))==len(dropdown_ids)] 
+    
+    # Initialize ids and metas lists
+    ids = []
+    metas = []
+    for l in ls:
+        meta = []
+        id = pre # Adds prefix if provided
+        for s in l.split(sep):
+            id += s.split(' ')[0] # Combine ids into a single string
+            meta.append(' '.join(s.split(' ')[1:])) # Retain metadata as a list of strings
+        ids.append(id)
+        metas.append(meta)
+
+    # Generate dataframe using list of dicts from metas and set index using ids
+    df = pd.DataFrame([dict(zip(dropdown_ids, row)) for row in metas],index=pd.Index(ids,name='series_id'))
+    return df.reset_index()
+
 ''' cols_with_subs: Returns list of dataframe columns with substring
         df: Dataframe
         sub: Substring
@@ -16,7 +47,6 @@ import requests
 def cols_with_subs(df: pd.DataFrame(), sub: str()):
     return [col for col in df.columns if sub in col]
     
-# Series ID methods
 ''' series_options: Return dataframe with all categories, options, order, & codes for a set of series IDs
         dc: Dictionary containing dataframes with categories and codes.
         option_col_subs: Substrings to look for options column
