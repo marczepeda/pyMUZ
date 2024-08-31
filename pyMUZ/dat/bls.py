@@ -36,8 +36,7 @@ def series_ids(ls: list(), dropdown_ids: list(), sep='.',exclude='.None', pre=''
         metas.append(meta)
 
     # Generate dataframe using list of dicts from metas and set index using ids
-    df = pd.DataFrame([dict(zip(dropdown_ids, row)) for row in metas],index=pd.Index(ids,name='series_id'))
-    return df.reset_index()
+    return pd.DataFrame([dict(zip(dropdown_ids, row)) for row in metas],index=pd.Index(ids,name='series_id')).reset_index()
 
 ''' cols_with_subs: Returns list of dataframe columns with substring
         df: Dataframe
