@@ -95,7 +95,7 @@ def join(dc: dict(), col='key'):
     df = pd.DataFrame()
     for key,val in dc.items():
         val[col]=key
-        df=pd.concat([df,val])
+        df=pd.concat([df,val]).reset_index(drop=True)
     return df
 
 ''' split: Returns from a dictionary of dataframes from a single dataframe
