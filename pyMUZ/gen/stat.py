@@ -53,7 +53,7 @@ def describe(df: pd.DataFrame, cols=[], group=''):
         method: multiple hypothesis testing correction method (Default: holm)
     Dependencies: pandas,scipy.stats,statsmodels.stats
 '''
-def difference(df: pd.DataFrame(), data_col: str(), compare_col: str(), compare: list(), same=False, para=True, alpha=0.05, within_cols=[],method='holm'):
+def difference(df: pd.DataFrame,data_col: str,compare_col: str,compare: list,same=False,para=True,alpha=0.05,within_cols=[],method='holm'):
     
     if not same: # Different samples
 

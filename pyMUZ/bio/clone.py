@@ -14,7 +14,7 @@ from Bio.Seq import Seq
         suf: suffix for oligonucleotide category
     Dependencies: pandas
 '''
-def ord_form(df:pd.DataFrame(),id:str(),seq:str(),suf:str(),pre:str()):
+def ord_form(df:pd.DataFrame,id:str,seq:str,suf:str,pre:str):
     ord = df[[(pre+id+suf),(pre+seq+suf)]]
     ord = ord.rename(columns={(pre+id+suf):'Oligo Name',(pre+seq+suf):'Sequence'})
     scale = []
@@ -39,7 +39,7 @@ def ord_form(df:pd.DataFrame(),id:str(),seq:str(),suf:str(),pre:str()):
         pre: prefix for ids and id column
     Dependencies: pandas, Bio.Seq
 '''
-def tb(df:pd.DataFrame(),id:str(),seq:str(),t5:str(),t3:str(),b5:str(),b3:str(),tG:bool(),pre:str()):
+def tb(df:pd.DataFrame,id:str,seq:str,t5:str,t3:str,b5:str,b3:str,tG:bool,pre:str):
     top_ids=[]
     bot_ids=[]
     top_seqs=[]
@@ -70,7 +70,7 @@ def tb(df:pd.DataFrame(),id:str(),seq:str(),t5:str(),t3:str(),b5:str(),b3:str(),
         order: order format
     Dependencies: pandas, top_bot(), ord_form()
 '''
-def be(df:pd.DataFrame(),id='id',spacer='spacer',
+def be(df:pd.DataFrame,id='id',spacer='spacer',
        t5='CACC',t3='',b5='AAAC',b3='',
        tG=True,order=True):
     df=tb(df=df,id=id,seq=spacer,t5=t5,t3=t3,b5=b5,b3=b3,tG=tG,pre='o')
@@ -100,7 +100,7 @@ def be(df:pd.DataFrame(),id='id',spacer='spacer',
         epegRNA motif: tevoPreQ1 (CGCGGTTCTATCTAGTTACGCGTTAAACCAACTAGAA)
     Dependencies: pandas, top_bot(), ord_form()
 '''
-def pe(df: pd.DataFrame(),id='id',tG=True, order=True,
+def pe(df: pd.DataFrame,id='id',tG=True, order=True,
        epeg_sp='epegRNA_spacer',epeg_sp_t5='CACC',epeg_sp_t3='GTTTAAGAGC',epeg_sp_b5='',epeg_sp_b3='',
        epeg_ex='epegRNA_extension',epeg_ex_t5='',epeg_ex_t3='',epeg_ex_b5='CGCG',epeg_ex_b3='GCACCGACTC',
        ng_sp='ngRNA_spacer',ngRNA_sp_t5='CACC',ngRNA_sp_t3='GTTTAAGAGC',ngRNA_sp_b5='',ngRNA_sp_b3=''):

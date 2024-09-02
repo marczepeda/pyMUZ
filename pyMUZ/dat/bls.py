@@ -18,7 +18,7 @@ from ..gen import tidy as t
         pre: series id prefix (optional)
     Dependencies: pandas
 '''
-def series_ids(ls: list(), dropdown_ids: list(), sep='.',exclude='.None', pre=''):
+def series_ids(ls: list, dropdown_ids: list, sep='.',exclude='.None', pre=''):
     
     # Clean list by removing trailing value (exclude) and truncated series
     ls = [l.split(exclude)[0] for l in ls]
@@ -45,7 +45,7 @@ def series_ids(ls: list(), dropdown_ids: list(), sep='.',exclude='.None', pre=''
         sub: Substring
     Dependencies: pandas
 '''
-def cols_with_subs(df: pd.DataFrame(), sub: str()):
+def cols_with_subs(df: pd.DataFrame, sub: str):
     return [col for col in df.columns if sub in col]
     
 ''' series_options: Return dataframe with all categories, options, order, & codes for a set of series IDs
@@ -54,7 +54,7 @@ def cols_with_subs(df: pd.DataFrame(), sub: str()):
         code_col_subs: Substrings to look for code column
     Dependencies: pandas,cols_with_subs()
 '''
-def series_options(dc: dict(), option_col_subs=['text','name'],code_col_subs=['code']):
+def series_options(dc: dict, option_col_subs=['text','name'],code_col_subs=['code']):
 
     # Get categories as well as their corresponding orders, options, & codes
     orders = [str(k.split('_')[0]) for k in dc.keys()]
@@ -91,7 +91,7 @@ def series_options(dc: dict(), option_col_subs=['text','name'],code_col_subs=['c
         end_year: end year for series data
     Dependencies: requests,json,pandas
 '''
-def api_v1(series_ids: list(), start_year, end_year):
+def api_v1(series_ids: list, start_year, end_year):
     
     # Obtain JSON files represented by series_ids from BLS API V1
     json_data = json.loads(requests.post('https://api.bls.gov/publicAPI/v1/timeseries/data/', 
@@ -120,7 +120,7 @@ def api_v1(series_ids: list(), start_year, end_year):
         registration_key: API registration key
     Dependencies: requests,json,pandas
 '''
-def api_v2(series_ids: list(),start_year,end_year,catalog=True,calculations=True,annual_average=True,aspects=True,registration_key='b623916dd99845bc8f430711d72c9f38'):
+def api_v2(series_ids: list,start_year,end_year,catalog=True,calculations=True,annual_average=True,aspects=True,registration_key='b623916dd99845bc8f430711d72c9f38'):
     
     # Obtain JSON files represented by series_ids from BLS API V2
     json_data = json.loads(requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', 
@@ -162,7 +162,7 @@ def api_v2(series_ids: list(),start_year,end_year,catalog=True,calculations=True
         registration_key: API registration key (optional, api_v='2')
     Dependencies: pandas,api_v1(),api_v2()
 '''
-def api_batch(series_ids: list(), start_year, end_year, api_v='2', **kwargs):
+def api_batch(series_ids: list, start_year, end_year, api_v='2', **kwargs):
 
     # Set API Version Rules & Notify User
     api_v_rules = {

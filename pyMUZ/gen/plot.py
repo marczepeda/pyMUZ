@@ -39,13 +39,13 @@ def log10(series):
         ax: matplotlib axis
         legend loc: legend location
 '''
-def move_dist_legend(ax,legend_loc,legend_title_size,legend_size,legend_bbox_to_anchor):
+def move_dist_legend(ax,legend_loc,legend_title_size,legend_size,legend_bbox_to_anchor,legend_ncol):
     old_legend = ax.legend_
     handles = old_legend.legendHandles
     labels = [t.get_text() for t in old_legend.get_texts()]
     title = old_legend.get_title().get_text()
     ax.legend(handles,labels,loc=legend_loc,bbox_to_anchor=legend_bbox_to_anchor,
-              title=title,title_fontsize=legend_title_size,fontsize=legend_size,)
+              title=title,title_fontsize=legend_title_size,fontsize=legend_size,ncol=legend_ncol)
 
 ''' extract_pivots: Returns a dictionary of pivot-formatted dataframes from tidy-formatted dataframe
         df: Tidy-formatted dataframe
@@ -55,7 +55,7 @@ def move_dist_legend(ax,legend_loc,legend_title_size,legend_size,legend_bbox_to_
         vals: value column name (optional)
     Dependencies: pandas
 '''
-def extract_pivots(df: pd.DataFrame(), x: str(), y: str(), vars='variable', vals='value'):
+def extract_pivots(df: pd.DataFrame, x: str, y: str, vars='variable', vals='value'):
     piv_keys = list(df[vars].value_counts().keys())
     pivots = dict()
     for key in piv_keys:
@@ -72,7 +72,7 @@ def formatter(typ,ax,df,x='x',y='y',cols='cols',file=None,dir=None,color_palette
               title='',title_size=18,title_weight='bold',
               x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
               y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,100),y_ticks_rot=0,yticks=[],
-              legend_title='',legend_title_size=12,legend_size=12,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0)):
+              legend_title='',legend_title_size=12,legend_size=12,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0),legend_ncol=1):
     
     # Define plot types
     scats = ['scat', 'line', 'line_scat']
@@ -115,13 +115,13 @@ def formatter(typ,ax,df,x='x',y='y',cols='cols',file=None,dir=None,color_palette
         if legend_title=='': legend_title=cols
         if legend_items==(0,0) and typ not in dists:
             ax.legend(title=legend_title,title_fontsize=legend_title_size,fontsize=legend_size,
-                    bbox_to_anchor=legend_bbox_to_anchor,loc=legend_loc) # Move legend to the right of the graph
+                    bbox_to_anchor=legend_bbox_to_anchor,loc=legend_loc,ncol=legend_ncol) # Move legend to the right of the graph
         elif typ not in dists:
             handles, labels = ax.get_legend_handles_labels()
             ax.legend(title=legend_title,title_fontsize=legend_title_size,fontsize=legend_size,
-                    bbox_to_anchor=legend_bbox_to_anchor,loc=legend_loc, # Move right of the graph
+                    bbox_to_anchor=legend_bbox_to_anchor,loc=legend_loc,ncol=legend_ncol, # Move right of the graph
                     handles=handles[legend_items[0]:legend_items[1]],labels=labels[legend_items[0]:legend_items[1]]) # Only retains specified labels
-        else: move_dist_legend(ax,legend_loc,legend_title_size,legend_size,legend_bbox_to_anchor)
+        else: move_dist_legend(ax,legend_loc,legend_title_size,legend_size,legend_bbox_to_anchor,legend_ncol)
 
     # Save & show fig
     if file is not None and dir is not None:
@@ -138,12 +138,12 @@ def formatter(typ,ax,df,x='x',y='y',cols='cols',file=None,dir=None,color_palette
         y: y-axis column
     Dependencies: os, matplotlib, seaborn, formatter(), re_un_cap(), round_up_pow_10()
 '''
-def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None,stys=None,cols_exclude=None,
+def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=None,cols_exclude=None,
          file=None,dir=None,color_palette='colorblind',edgecol='black',
          figsize=(10,6),title='',title_size=18,title_weight='bold',
          x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
          y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,100),y_ticks_rot=0,yticks=[],
-         legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0),
+         legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0),legend_ncol=1,
          **kwargs):
 
     # Omit excluded data
@@ -166,7 +166,7 @@ def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None
               title,title_size,title_weight,
               x_axis,x_axis_size,x_axis_weight,x_axis_scale,x_axis_dims,x_ticks_rot,xticks,
               y_axis,y_axis_size,y_axis_weight,y_axis_scale,y_axis_dims,y_ticks_rot,yticks,
-              legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items)
+              legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items,legend_ncol)
 
 ''' cat: Creates category dependent graphs.
         typ: plot type (bar, box, violin, swarm, strip, point, count, bar_swarm, box_swarm, violin_swarm)
@@ -175,12 +175,12 @@ def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None
         y: y-axis column
     Dependencies: os, matplotlib, seaborn, formatter(), re_un_cap(), round_up_pow_10()
 '''
-def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,cols_ord=None,cols_exclude=None,
+def cat(typ: str,df: pd.DataFrame,x: str,y: str,errorbar=None,cols=None,cols_ord=None,cols_exclude=None,
         file=None,dir=None,color_palette='colorblind',edgecol='black',lw=1,
         figsize=(10,6),title='',title_size=18,title_weight='bold',
         x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
         y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,100),y_ticks_rot=0,yticks=[],
-        legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0), 
+        legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0),legend_ncol=1, 
         **kwargs):
     
     # Omit excluded data
@@ -231,7 +231,7 @@ def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,
               title,title_size,title_weight,
               x_axis,x_axis_size,x_axis_weight,x_axis_scale,x_axis_dims,x_ticks_rot,xticks,
               y_axis,y_axis_size,y_axis_weight,y_axis_scale,y_axis_dims,y_ticks_rot,yticks,
-              legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items)
+              legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items,legend_ncol)
 
 ''' dist: Creates distribution graphs.
         typ: plot type (hist, kde, hist_kde, rid)
@@ -239,12 +239,12 @@ def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,
         x: x-axis column
     Dependencies: os, matplotlib, seaborn, formatter(), re_un_cap(), round_up_pow_10()
 '''
-def dist(typ: str(),df: pd.DataFrame(),x: str(),cols=None,cols_ord=None,cols_exclude=None,bins=40,log10_low=0,
+def dist(typ: str,df: pd.DataFrame,x: str,cols=None,cols_ord=None,cols_exclude=None,bins=40,log10_low=0,
         file=None,dir=None,color_palette='colorblind',edgecol='black',lw=1,ht=1.5,asp=5,tp=.8,hs=0,des=False,
         figsize=(10,6),title='',title_size=18,title_weight='bold',
         x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
         y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,100),y_ticks_rot=0,yticks=[],
-        legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0), 
+        legend_title='',legend_title_size=12,legend_size=9,legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_items=(0,0),legend_ncol=1, 
         **kwargs):
 
     # Omit excluded data
@@ -265,7 +265,7 @@ def dist(typ: str(),df: pd.DataFrame(),x: str(),cols=None,cols_ord=None,cols_exc
                   title,title_size,title_weight,
                   x_axis,x_axis_size,x_axis_weight,x_axis_scale,x_axis_dims,x_ticks_rot,xticks,
                   y_axis,y_axis_size,y_axis_weight,y_axis_scale,y_axis_dims,y_ticks_rot,yticks,
-                  legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items)
+                  legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items,legend_ncol)
     elif typ=='kde': 
         fig, ax = plt.subplots(figsize=figsize)
         if x_axis_scale=='log':
@@ -280,7 +280,7 @@ def dist(typ: str(),df: pd.DataFrame(),x: str(),cols=None,cols_ord=None,cols_exc
                   title,title_size,title_weight,
                   x_axis,x_axis_size,x_axis_weight,x_axis_scale,x_axis_dims,x_ticks_rot,xticks,
                   y_axis,y_axis_size,y_axis_weight,y_axis_scale,y_axis_dims,y_ticks_rot,yticks,
-                  legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items)
+                  legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items,legend_ncol)
     elif typ=='hist_kde':
         fig, ax = plt.subplots(figsize=figsize)
         if x_axis_scale=='log':
@@ -295,7 +295,7 @@ def dist(typ: str(),df: pd.DataFrame(),x: str(),cols=None,cols_ord=None,cols_exc
                   title,title_size,title_weight,
                   x_axis,x_axis_size,x_axis_weight,x_axis_scale,x_axis_dims,x_ticks_rot,xticks,
                   y_axis,y_axis_size,y_axis_weight,y_axis_scale,y_axis_dims,y_ticks_rot,yticks,
-                  legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items)
+                  legend_title,legend_title_size,legend_size,legend_bbox_to_anchor,legend_loc,legend_items,legend_ncol)
     elif typ=='rid':
         sns.color_palette(color_palette)
         if x_axis_scale=='log':
@@ -336,7 +336,7 @@ def dist(typ: str(),df: pd.DataFrame(),x: str(),cols=None,cols_ord=None,cols_exc
         y: y-axis
     Dependencies: os, matplotlib, seaborn, formatter(), re_un_cap(), round_up_pow_10()
 '''
-def heat(df: pd.DataFrame(), x: str(), y: str(), vars='variable', vals='value', typ='ht',
+def heat(df: pd.DataFrame, x: str, y: str, vars='variable', vals='value', typ='ht',
          file=None,dir=None,color_palette='colorblind',edgecol='black',lw=1,annot=False,cmap="Reds",sq=True,
          title='',title_size=18,title_weight='bold',
          x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=0,
@@ -388,7 +388,7 @@ def heat(df: pd.DataFrame(), x: str(), y: str(), vars='variable', vals='value', 
         cutoff: y-axis values needs be greater than (ex: 0%)
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
-def stack(df: pd.DataFrame(),x='sample',y='fraction',cols='edit',cutoff=0,cols_ord=[],
+def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0,cols_ord=[],
           file=None,dir=None,color_palette='viridis',
           figsize=(10,6),title='',title_size=18,title_weight='bold',
           x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,

@@ -91,7 +91,7 @@ def melt(dc: dict(),id_vars,**kwargs):
         col: name for keys column
     Dependencies: pandas
 '''
-def join(dc: dict(), col='key'):
+def join(dc: dict, col='key'):
     df = pd.DataFrame()
     for key,val in dc.items():
         val[col]=key
@@ -103,7 +103,7 @@ def join(dc: dict(), col='key'):
         key: column for spliting dataframe
     Dependencies: pandas
 '''
-def split(df: pd.DataFrame(), key: str()):
+def split(df: pd.DataFrame, key: str):
     return {k:df[df[key]==k] for k in list(df[key].value_counts().keys())} 
 
 ''' merge: Adds metadata columns to data dataframe using metadata dataframe
@@ -112,7 +112,7 @@ def split(df: pd.DataFrame(), key: str()):
         id: id(s) column name(s) [str: both, list: data & meta]
         cols: list of column names in metadata dataframe
 '''
-def merge(data: pd.DataFrame(), meta: pd.DataFrame(), id, cols):
+def merge(data: pd.DataFrame, meta: pd.DataFrame, id, cols):
     if type(id)==str:
         for c in cols: 
             id_c = dict(zip(meta[id],meta[c]))
@@ -146,7 +146,7 @@ def dc_to_ls(dc: dict(),sep='.'):
         ls: list
         sep: seperator for subdictionaries for values in the list
 '''
-def ls_to_dc(ls: list(), sep='.'):
+def ls_to_dc(ls: list, sep='.'):
 
     dc = {} # Initialize final dict
 

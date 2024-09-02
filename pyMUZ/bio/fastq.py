@@ -23,7 +23,7 @@ from ..gen import plot as p
         compressed: zipped file(s)?
     Dependencies: Bio.SeqIO, gzip, os, pandas, Bio.Seq.Seq
 '''
-def get_fastqs(dir: str(),suf='.fastq.gz',quality=30,compressed=True):
+def get_fastqs(dir: str,suf='.fastq.gz',quality=30,compressed=True):
     
     # Obtain fastq files
     files = os.listdir(dir)
@@ -63,7 +63,7 @@ def get_fastqs(dir: str(),suf='.fastq.gz',quality=30,compressed=True):
         flank3: top strand flanking sequence 3'
     Dependencies: get_fastqs(), pandas, Bio.Seq.Seq
 '''
-def filter_fastqs(fastqs: dict(), flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCTGGA'):
+def filter_fastqs(fastqs: dict, flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCTGGA'):
 
     # Remove fastq records that do not have flanks
     fastqs_1=dict()
@@ -91,7 +91,7 @@ def filter_fastqs(fastqs: dict(), flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCT
         res: First AA number
     Dependencies: get_fastqs(),filter_fastqs(), pandas, Bio.Seq.Seq
 '''
-def genotype(fastqs: dict(),
+def genotype(fastqs: dict,
              wt='GAACGGCCCTTCCAGTGCAATCAGTGCGGGGCCTCATTCACCCAGAAGGGCAACCTGCTCCGGCACATCAAGCTGCATTCCGGGGAGAAGCCCTTCAAATGCCACCTCTGCAACTACGCCTGCCGCCGGAGGGACGCCCTCACTGGCCACCTGAGGACGCACTCC',
              res=142):
     for file,fastq in fastqs.items():
@@ -113,7 +113,7 @@ def genotype(fastqs: dict(),
         fastqs: dictionary from genotype
     Dependencies: get_fastqs(),filter_fastqs(),genotype(),pandas
 '''
-def outcomes(fastqs: dict()):
+def outcomes(fastqs: dict):
     df = pd.DataFrame()
     for file,fastq in fastqs.items():
         temp=pd.DataFrame({'sample':[file]*len(fastq['edit'].value_counts()),
@@ -158,7 +158,7 @@ aa_props = {
         col: Edit column name
     Dependencies: pandas
 '''
-def edit_1(df: pd.DataFrame(),col='edit'):
+def edit_1(df: pd.DataFrame,col='edit'):
     df_1 = df[(df[col].str.contains(',')==False)&(df[col]!='WT')&(df[col]!='Indel')] # Isolate single AA changes
     df_1['before']=df_1[col].str[0] # Split edit information
     df_1['after']=df_1[col].str[-1]
@@ -229,7 +229,7 @@ def dms_tidy(df: pd.DataFrame(),cond: str(),
         tick: New tick label
         tick_sub: Previous numeric tick label that will become a subscript
 '''
-def subscript(df: pd.DataFrame(),tick='before',tick_sub='number'):
+def subscript(df: pd.DataFrame,tick='before',tick_sub='number'):
     ticks = []
     labels = []
     for (t,ts) in set(zip(df[tick],df[tick_sub])):
@@ -244,7 +244,7 @@ def subscript(df: pd.DataFrame(),tick='before',tick_sub='number'):
         y: y-axis column
     Dependencies: os, matplotlib, seaborn, plot.py
 '''
-def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,cols_ord=None,cutoff=0.01,cols_exclude=None,
+def cat(typ: str,df: pd.DataFrame,x: str,y: str,errorbar=None,cols=None,cols_ord=None,cutoff=0.01,cols_exclude=None,
         file=None,dir=None,color_palette='colorblind',edgecol='black',lw=1,
         figsize=(10,6),title='',title_size=18,title_weight='bold',
         x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,1),x_ticks_rot=0,xticks=[],
@@ -285,7 +285,7 @@ def cat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),errorbar=None,cols=None,
         y: y-axis column
     Dependencies: os, matplotlib, seaborn, plot.py
 '''
-def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None,stys=None,cutoff=0.01,cols_exclude=None,
+def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=None,cutoff=0.01,cols_exclude=None,
          file=None,dir=None,color_palette='colorblind',edgecol='black',
          figsize=(10,6),title='',title_size=18,title_weight='bold',
          x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
@@ -315,7 +315,7 @@ def scat(typ: str(),df: pd.DataFrame(),x: str(),y: str(),cols=None,cols_ord=None
         cutoff: y-axis values needs be greater than (ex: 1%)
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
-def stack(df: pd.DataFrame(),x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],
+def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],
           file=None,dir=None,color_palette='viridis',
           title='Editing Outcomes',title_size=18,title_weight='bold',
           figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
@@ -352,7 +352,7 @@ def stack(df: pd.DataFrame(),x='sample',y='fraction',cols='edit',cutoff=0.01,col
         vals: Values column
     Dependencies: matplotlib,seaborn,aa_props
 '''
-def dms_grid(dc: dict(),x='number',y='after',vals='count',
+def dms_grid(dc: dict,x='number',y='after',vals='count',
              file=None,dir=None,edgecol='black',lw=1,annot=False,cmap="Reds",
              title='',title_size=12,title_weight='bold',
              x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
