@@ -16,6 +16,41 @@ from ..gen import tidy as t
 from ..gen import plot as p
 
 # Determine editing outcomes & distribution
+''' revcom_fastqs: Write reverse complement of fastqs to a new directory
+        in_dir: directory with fastq files
+        out_dir: new directory with reverse complement fastq files
+    Dependencies: Bio.SeqIO, gzip, os, Bio.Seq.Seq
+'''
+def revcom_fastqs(in_dir: str, out_dir: str):
+
+    os.makedirs(out_dir, exist_ok=True) # Ensure the output directory exists
+
+    for filename in os.listdir(in_dir): # Find all .fastq.gz & .fastq files in the input directory
+
+        if filename.endswith(".fastq.gz"):
+            input_fastq_gz = os.path.join(in_dir, filename)
+            output_fastq_gz = os.path.join(out_dir, filename)
+            print(f"Processing {filename}...")
+            with gzip.open(input_fastq_gz, "rt") as infile, gzip.open(output_fastq_gz, "wt") as outfile:
+                for record in SeqIO.parse(infile, "fastq"):
+                    reverse_complement_seq = record.seq.reverse_complement() # Compute the reverse complement of the sequence
+                    reverse_complement_record = record[:] # Create a new record with the reverse complement sequence
+                    reverse_complement_record.seq = reverse_complement_seq # Write the new record to the output file
+                    SeqIO.write(reverse_complement_record, outfile, "fastq")
+            print(f"Saved reverse complement to {output_fastq_gz}")
+        
+        elif filename.endswith(".fastq"):
+            input_fastq = os.path.join(in_dir, filename)
+            output_fastq = os.path.join(out_dir, filename)
+            print(f"Processing {filename}...")
+            with open(input_fastq, "r") as infile, open(output_fastq, "w") as outfile:
+                for record in SeqIO.parse(infile, "fastq"):
+                    reverse_complement_seq = record.seq.reverse_complement() # Compute the reverse complement of the sequence
+                    reverse_complement_record = record[:] # Create a new record with the reverse complement sequence
+                    reverse_complement_record.seq = reverse_complement_seq # Write the new record to the output file
+                    SeqIO.write(reverse_complement_record, outfile, "fastq")
+            print(f"Saved reverse complement to {output_fastq_gz}")
+
 ''' get_fastqs: Get fastq files from directory and store records in dataframes in a dictionary
         dir: directory with fastq files
         suf: file suffix (.fastq.gz or .fastq)
@@ -23,7 +58,7 @@ from ..gen import plot as p
         compressed: zipped file(s)?
     Dependencies: Bio.SeqIO, gzip, os, pandas, Bio.Seq.Seq
 '''
-def get_fastqs(dir: str,suf='.fastq.gz',quality=30,compressed=True):
+def get_fastqs(dir: str,suf='.fastq.gz',quality=0,compressed=True):
     
     # Obtain fastq files
     files = os.listdir(dir)
@@ -57,13 +92,14 @@ def get_fastqs(dir: str,suf='.fastq.gz',quality=30,compressed=True):
                                                      'phred_scores':phred_scores}) 
     return fastqs
 
-''' filter_fastqs: Gets DNA and AA sequence for records with flanks
+''' filter_fastqs: Gets DNA and AA sequence for records within flanks
         fastqs: dictionary from get_fastqs
         flank5: top strand flanking sequence 5'
         flank3: top strand flanking sequence 3'
+        quality: phred quality score threshold within flanks
     Dependencies: get_fastqs(), pandas, Bio.Seq.Seq
 '''
-def filter_fastqs(fastqs: dict, flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCTGGA'):
+def filter_fastqs(fastqs: dict, flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCTGGA',quality=0):
 
     # Remove fastq records that do not have flanks
     fastqs_1=dict()
@@ -72,17 +108,23 @@ def filter_fastqs(fastqs: dict, flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCTGG
         for i,seq in enumerate(fastq['seq']):
             if (seq.find(flank5)==-1)|(seq.find(flank3)==-1): missing_flank.append(i)
         fastqs_1[file] = fastq.drop(missing_flank).reset_index(drop=True)
-         
-    # Obtain nucleotide and AA sequences within flanks
+     
+    # Obtain nucleotide and AA sequences within flanks; remove fastq records with phred scores within flanks
     for file,fastq in fastqs_1.items():
         nuc=[]
-        nuc_len=[]
         prot=[]
-        for seq in fastq['seq']:
+        low_phred=[]
+        print(len(fastq))
+        for i,seq in enumerate(fastq['seq']):
             nuc.append(seq[seq.find(flank5)+len(flank5):seq.find(flank3)])
             prot.append(Seq.translate(seq[seq.find(flank5)+len(flank5):seq.find(flank3)]))
+            if quality>min(fastq.iloc[i]['phred_scores'][seq.find(flank5)+len(flank5):seq.find(flank3)]): low_phred.append(i)
         fastqs_1[file]['nuc']=nuc
         fastqs_1[file]['prot']=prot
+        print(low_phred)
+        fastqs_1[file] = fastq.drop(low_phred).reset_index(drop=True)
+        print(len(fastqs_1[file]))
+    
     return fastqs_1
 
 ''' genotype: Assign genotypes to sequence records
@@ -316,9 +358,9 @@ def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=No
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
 def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],
-          file=None,dir=None,color_palette='viridis',
+          file=None,dir=None,color_palette='Set2',
           title='Editing Outcomes',title_size=18,title_weight='bold',
-          figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
+          figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
           y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,
           legend_title='',legend_title_size=12,legend_size=12,
           legend_bbox_to_anchor=(1,1),legend_loc='upper left',**kwargs):
@@ -340,7 +382,7 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_
     p.stack(df=df,x=x,y=y,cols=cols,cutoff=cutoff,cols_ord=cols_ord,
           file=file,dir=dir,color_palette=color_palette,
           title=title,title_size=title_size,title_weight=title_weight,
-          figsize=figsize,x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,
+          figsize=figsize,x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,x_ticks_ha=x_ticks_ha,
           y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_ticks_rot=y_ticks_rot,
           legend_title=legend_title,legend_title_size=legend_title_size,legend_size=legend_size,
           legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,**kwargs)

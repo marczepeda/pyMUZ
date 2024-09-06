@@ -389,9 +389,9 @@ def heat(df: pd.DataFrame, x: str, y: str, vars='variable', vals='value', typ='h
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
 def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0,cols_ord=[],
-          file=None,dir=None,color_palette='viridis',
+          file=None,dir=None,color_palette='Set2',
           figsize=(10,6),title='',title_size=18,title_weight='bold',
-          x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
+          x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
           y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,
           legend_title='',legend_title_size=12,legend_size=12,
           legend_bbox_to_anchor=(1,1),legend_loc='upper left',**kwargs):
@@ -411,8 +411,8 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0,cols_ord
     # Set x axis
     if x_axis=='': x_axis=re_un_cap(x)
     plt.xlabel(x_axis, fontsize=x_axis_size, fontweight=x_axis_weight)
-    if x_ticks_rot!=90: plt.xticks(rotation=x_ticks_rot, ha='right')
-
+    plt.xticks(rotation=x_ticks_rot, ha=x_ticks_ha)
+    
     # Set y axis
     if y_axis=='': y_axis=re_un_cap(y)
     plt.ylabel(y_axis, fontsize=y_axis_size, fontweight=y_axis_weight)
