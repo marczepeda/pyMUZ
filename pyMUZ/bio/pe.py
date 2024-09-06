@@ -581,47 +581,6 @@ def RTT_designer(pegRNAs: pd.DataFrame, file: str, rtt_length: int=21, aa_index:
     # Combine wildtype, substitution, insertion, deletion libraries
     return pd.concat([pegRNAs,wildtypes,insertions,deletions]).reset_index(drop=True)
 
-''' compare_RTTs: Returns edit by comparing RTT to WT RTT.
-        rtt_prot: RTT amino acid sequence
-        rtt_prot_indexes: RTT amino acid sequence indexes
-        rtt_wt_prot: wildtype RTT amino acid sequence
-        rtt_wt_prot_indexes: wildtype RTT amino acid sequence indexes
-        annotation: pegRNA annotation
-    Dependencies: 
-'''
-'''def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexes: list):
-    # Determine edit category
-    if (rtt_prot==rtt_wt_prot)&(rtt_prot_indexes==rtt_wt_prot_indexes): # Wildtype
-        print('WT')
-        return 'WT'
-    
-    elif len(rtt_prot)>len(rtt_wt_prot): # Insertion
-        for i in range(len(rtt_wt_prot)): # Find difference
-            if rtt_prot[i] != rtt_wt_prot[i]:
-                i_diff = i
-                break
-        edit = f'{rtt_prot[i_diff-1]}{rtt_prot_indexes[i_diff-1]}{"".join(rtt_prot[i_diff-1:i_diff+1])}'
-        print(f'Insertion Edit: {edit}\n')
-        return edit
-    
-    elif len(rtt_prot)<len(rtt_wt_prot): # Deletion
-        for i in range(len(rtt_prot)): # Find difference
-            if rtt_prot[i] != rtt_wt_prot[i]:
-                i_diff = i
-                break
-        edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}del'
-        print(f'Deletion Edit: {edit}\n')
-        return edit
-    
-    else: # Substitution
-        for i in range(len(rtt_prot)): # Find difference
-            if rtt_prot[i] != rtt_wt_prot[i]:
-                i_diff = i
-                break
-        edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}{rtt_prot[i_diff]}'
-        print(f'Substitution Edit: {edit}\n')
-        return edit'''
-
 def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexes: list,annotation: str):
     
     # Determine edit category
