@@ -6,6 +6,7 @@
 import pandas as pd
 import numpy as np
 import os
+import re
 from Bio.Seq import Seq
 from ..bio import pegLIT as pegLIT
 from ..gen import io as io
@@ -406,12 +407,12 @@ def RTT_designer(pegRNAs: pd.DataFrame, file: str, rtt_length: int=21, aa_index:
                                                   'First_extension_nucleotide': [rtt_in[0] for rtt_in in rtts_in]})]).reset_index(drop=True)
 
             # Obtain single deletion RTTs from - strand
-            edits_del = [f'{str(aa)}{rc_rtt_wt_inframe_prot_indexes[i]}del' for i,aa in enumerate(rc_rtt_wt_inframe_prot)]
+            edits_del = [f'{str(aa)}{rc_rtt_wt_inframe_prot_indexes[i]}del' for i,aa in enumerate(rc_rtt_wt_inframe_prot) if i<len(rc_rtt_wt_inframe_prot)-1] # Don't want last AA
             rtts_del = [Seq.reverse_complement(Seq('').join([rc_rtt_wt_inframe_nuc_codons_flank5, # Codon frame flank 5'
                                                Seq('').join(rc_rtt_wt_inframe_nuc_codons[:i]), # Codons before deletion
                                                Seq('').join(rc_rtt_wt_inframe_nuc_codons[i+1:]), # Codons after deletion
                                                rc_rtt_wt_inframe_nuc_codons_flank3])) # Codon frame flank 3'
-                                               for i in range(len(rc_rtt_wt_inframe_nuc_codons))]
+                                               for i in range(len(rc_rtt_wt_inframe_nuc_codons)) if i<len(rc_rtt_wt_inframe_nuc_codons)-1] # Don't want last AA
             
             print(f'Deletions: {edits_del}')
             print(f'Deletion RTTs: {rtts_del}\n\n')
@@ -540,12 +541,12 @@ def RTT_designer(pegRNAs: pd.DataFrame, file: str, rtt_length: int=21, aa_index:
                                                   'First_extension_nucleotide': [rtt_in[0] for rtt_in in rtts_in]})]).reset_index(drop=True)
 
             # Obtain single deletion RTTs from + strand
-            edits_del = [f'{str(aa)}{rtt_wt_inframe_prot_indexes[i]}del' for i,aa in enumerate(rtt_wt_inframe_prot)]
+            edits_del = [f'{str(aa)}{rtt_wt_inframe_prot_indexes[i]}del' for i,aa in enumerate(rtt_wt_inframe_prot) if i<len(rtt_wt_inframe_prot)-1] # Don't want last AA
             rtts_del = [Seq('').join([rtt_wt_inframe_nuc_codons_flank5, # Codon frame flank 5'
                         Seq('').join(rtt_wt_inframe_nuc_codons[:i]), # Codons before deletion
                         Seq('').join(rtt_wt_inframe_nuc_codons[i+1:]), # Codons after deletion
                         rtt_wt_inframe_nuc_codons_flank3]) # Codon frame flank 3'
-                        for i in range(len(rtt_wt_inframe_nuc_codons))]
+                        for i in range(len(rtt_wt_inframe_nuc_codons)) if i<len(rtt_wt_inframe_nuc_codons)-1] # Don't want last AA
             
             print(f'Deletions: {edits_del}')
             print(f'Deletion RTTs: {rtts_del}\n\n')
@@ -581,7 +582,15 @@ def RTT_designer(pegRNAs: pd.DataFrame, file: str, rtt_length: int=21, aa_index:
     # Combine wildtype, substitution, insertion, deletion libraries
     return pd.concat([pegRNAs,wildtypes,insertions,deletions]).reset_index(drop=True)
 
-def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexes: list,annotation: str):
+''' compare_RTTs: Compares RTT outcome to WT RTT outcome and returns observed it.
+        rtt_prot: RTT outcome, which is AA sequence
+        rtt_prot_indexes: RTT outcome indexes, which is AA sequence indexes
+        rtt_wt_prot_indexes: RTT WT outcome, which is WT AA sequence
+        rtt_wt_prot_indexes: RTT WT outcome indexes, which is WT AA sequence indexes
+        annotation: PrimeDesign output, insertion, deletion, or wildtype
+        strand: Prime Design output (i.e., "+" or "-")
+'''
+def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexes: list,annotation: str,strand: str):
     
     # Determine edit category
     if (rtt_prot==rtt_wt_prot)&(rtt_prot_indexes==rtt_wt_prot_indexes): # Wildtype
@@ -589,22 +598,41 @@ def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexe
         return None
     
     elif annotation=='insertion': # Insertion
-        for i in range(len(rtt_wt_prot)): # Find difference
-            if rtt_prot[i] != rtt_wt_prot[i]:
-                i_diff = i
-                break
-        edit = f'{rtt_prot[i_diff-1]}{rtt_prot_indexes[i_diff-1]}{"".join(rtt_prot[i_diff-1:i_diff+1])}'
-        print(f'Insertion Edit: {edit}\n')
-        return edit
+        if strand=='+':
+            for i in range(len(rtt_wt_prot)): # Find difference starting from 5' end (N-term)
+                if rtt_prot[i] != rtt_wt_prot[i]:
+                    i_diff = i
+                    break
+            edit = f'{rtt_wt_prot[i_diff-1]}{rtt_wt_prot_indexes[i_diff-1]}{"".join(rtt_prot[i_diff-1:i_diff+1])}'
+            print(f'Insertion Edit: {edit}\n')
+            return edit
+        elif strand=='-':
+            for i in range(len(rtt_wt_prot)-1,-1,-1): # Find difference starting from 3' end (C-term)
+                if rtt_prot[i] != rtt_wt_prot[i]:
+                    i_diff = i
+                    break
+            edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}{"".join(rtt_prot[i_diff-1:i_diff+1])}'
+            print(f'Insertion Edit: {edit}\n')
+            return edit
     
-    elif annotation=='deletion': # Insertion
-        for i in range(len(rtt_wt_prot)): # Find difference
-            if rtt_prot[i] != rtt_wt_prot[i]:
-                i_diff = i
-                break
-        edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}del'
-        print(f'Deletion Edit: {edit}\n')
-        return edit
+    elif annotation=='deletion': # Deletion
+        if strand=='+':
+            for i in range(len(rtt_wt_prot)): # Find difference starting from 5' end (N-term)
+                if rtt_prot[i] != rtt_wt_prot[i]:
+                    i_diff = i
+                    break
+            edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}del'
+            print(f'Deletion Edit: {edit}\n')
+            return edit
+        elif strand=='-':
+            for i in range(len(rtt_wt_prot)-1,-1,-1): # Find difference starting from 3' end (C-term)
+                if rtt_prot[i] != rtt_wt_prot[i]:
+                    i_diff = i
+                    break
+            edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}del'
+            print(f'Deletion Edit: {edit}\n')
+            return edit
+        else: print('Error: Strand must be "+" or "-"')
 
     else: # Substitution
         for i in range(len(rtt_prot)): # Find difference
@@ -620,7 +648,12 @@ def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexe
         pegRNAs: pegRNAs DataFrame
         file (str): Input file (.txt or .csv) with sequences for PrimeDesign. Format: target_name,target_sequence (column names required)
         aa_index: 1st amino acid in target sequence index (Optional, Default: start codon = 1)
-    Dependencies:
+    Dependencies: Bio.Seq.Seq,numpy,pandas,is_sublist_in_order(),get_codons(),get_codon_frames(),compare_RTTs()
+    Common errors for calling edits...
+        deletions:
+            (1) single deletion of repeated AA results in wrong AA #
+            (2) N-terminus AA deletion results in wildtype
+            (3) AA deletion outside of target sequence boundary results in wrong AA #
 '''
 def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
     
@@ -633,7 +666,6 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
     flank5 = Seq(target_sequence.split('(')[0])
     flank3 = Seq(target_sequence.split(')')[1])
     seq_nuc = flank5 + seq + flank3  # Join full nucleotide reference sequence
-    rc_seq = Seq.reverse_complement(seq) # In-frame reverse complement sequence
     rc_seq_nuc = Seq.reverse_complement(seq_nuc) # Full nucleotide reference reverse complement sequence
     seq_prot = Seq.translate(seq) # In-frame amino acid sequence
     aa_indexes = list(np.arange(aa_index,aa_index+len(seq_prot))) # In-frame amino acid indexes
@@ -661,7 +693,6 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
     edits_substitutions_set = set(edits_substitutions)
     edits_insertions_set = set(edits_insertions)
     edits_deletions_set = set(edits_deletions)
-    edits_expected_set = set(edits_substitutions+edits_insertions+edits_deletions)
     
     print(f'Expected Edits in pegRNA library...\nSubstitutions: {edits_substitutions}\nInsertions: {edits_insertions}\nDeletions: {edits_deletions}')
     print(f'All substitions present: {edits_substitutions_set.issubset(set(pegRNAs["Edit"]))}; missing: {edits_substitutions_set-set(pegRNAs["Edit"])}')
@@ -670,8 +701,12 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
 
     edits = [] # Determine all edits in the pegRNA library
     edit_matches = []
+    prot_befores = []
+    prot_afters = []
+    edit_matches_explain = []
     for j in range(len(pegRNAs)): # Iterate through primer binding sites
-
+        
+        print(f'Loop: {j}')
         if pegRNAs.iloc[j]['Strand']=='+': # Spacer: + strand; PBS & RTT: - strand
             
             # Obtain reverse complement PBS in-frame from + strand
@@ -753,14 +788,31 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
             print(f'PBS Flank 3\' + RTT WT (RC) Amino Acid #s In-Frame: {rc_rtt_wt_inframe_prot_indexes}\n')
 
             # Determine edit by comparing RTT to WT RTT
+            prot_befores.append(''.join([str(aa) for aa in rc_rtt_wt_inframe_prot]))
+            prot_afters.append(''.join([str(aa) for aa in rc_pbs_inframe_flank3_rtt_prot]))
+            print(f'Expected edit: {pegRNAs.iloc[j]["Edit"]}')
             edit = compare_RTTs(rtt_prot=rc_pbs_inframe_flank3_rtt_prot,
                                 rtt_prot_indexes=rc_pbs_inframe_flank3_rtt_prot_indexes,
                                 rtt_wt_prot=rc_rtt_wt_inframe_prot,
                                 rtt_wt_prot_indexes=rc_rtt_wt_inframe_prot_indexes,
-                                annotation=pegRNAs.iloc[j]['Annotation'])
+                                annotation=pegRNAs.iloc[j]['Annotation'],
+                                strand=pegRNAs.iloc[j]['Strand'])
             edits.append(edit)
-            if edit==pegRNAs.iloc[j]['Edit']: edit_matches.append(True)  # Compare expected edit to actual edit
-            else: edit_matches.append(False)
+
+            # Compare expected edit to actual edit
+            if edit==pegRNAs.iloc[j]['Edit']: 
+                edit_matches.append(True)
+                edit_matches_explain.append(None) # No need to explain matching edits
+            else: 
+                edit_matches.append(False)
+                if edit is not None:
+                    position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
+                    if (position==aa_index-1)&(pegRNAs.iloc[j]['Annotation']=='deletion'): edit_matches_explain.append('Common pegRNAs_tester() error: AA deletion outside of target sequence boundary results in wrong AA #')
+                    elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
+                    else: edit_matches_explain.append('Investigate: unknown error')
+                elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Common pegRNAs_tester() error: N-terminus AA deletion results in wildtype') 
+                else: edit_matches_explain.append('Investigate: unknown error')
+
         
         elif pegRNAs.iloc[j]['Strand']=='-': # Spacer: - strand; PBS & RTT: + strand
             
@@ -843,14 +895,30 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
             print(f'RTT WT + PBS Flank 5\' Amino Acid #s In-Frame: {rtt_wt_inframe_prot_indexes}\n')
 
             # Determine edit by comparing RTT to WT RTT
+            prot_befores.append(''.join([str(aa) for aa in rtt_wt_inframe_prot]))
+            prot_afters.append(''.join([str(aa) for aa in rtt_pbs_inframe_flank5_prot]))
+            print(f'Expected edit: {pegRNAs.iloc[j]["Edit"]}')
             edit = compare_RTTs(rtt_prot=rtt_pbs_inframe_flank5_prot,
                                 rtt_prot_indexes=rtt_pbs_inframe_flank5_prot_indexes,
                                 rtt_wt_prot=rtt_wt_inframe_prot,
                                 rtt_wt_prot_indexes=rtt_wt_inframe_prot_indexes,
-                                annotation=pegRNAs.iloc[j]['Annotation'])
+                                annotation=pegRNAs.iloc[j]['Annotation'],
+                                strand=pegRNAs.iloc[j]['Strand'])
             edits.append(edit)
-            if edit==pegRNAs.iloc[j]['Edit']: edit_matches.append(True) # Compare expected edit to actual edit
-            else: edit_matches.append(False)
+            
+            # Compare expected edit to actual edit
+            if edit==pegRNAs.iloc[j]['Edit']:
+                edit_matches.append(True)
+                edit_matches_explain.append(None) # No need to explain matching edits
+            else: 
+                edit_matches.append(False)
+                if edit is not None:
+                    position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
+                    if (position==aa_index-1)&(pegRNAs.iloc[j]['Annotation']=='deletion'): edit_matches_explain.append('Common pegRNAs_tester() error: AA deletion outside of target sequence boundary results in wrong AA #')
+                    elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
+                    else: edit_matches_explain.append('Investigate: unknown error')
+                elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Common pegRNAs_tester() error: N-terminus AA deletion results in wildtype') 
+                else: edit_matches_explain.append('Investigate: unknown error')
 
         else: 
             print('Error: Strand column can only have "+" and "-".')
@@ -858,4 +926,7 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
     
     pegRNAs['Edit_check']=edits
     pegRNAs['Edit_matches']=edit_matches
+    pegRNAs['AAs_before']=prot_befores
+    pegRNAs['AAs_after']=prot_afters
+    pegRNAs['Edit_matches_explain']=edit_matches_explain
     return pegRNAs
