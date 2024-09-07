@@ -10,6 +10,7 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.anova import AnovaRM
 from statsmodels.stats.multitest import multipletests
 
+# Statistics methods
 ''' describe: Returns descriptive statistics for numerical columns in a DataFrame
         df: DataFrame
         cols: list of numerical columns to compute statistics (optional)

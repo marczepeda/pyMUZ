@@ -2,7 +2,7 @@
 # Author: Marc Zepeda
 # Date: 2024-05-29
 
-# Import methods
+# Import packages
 import pandas as pd
 from Bio.Seq import Seq
 
