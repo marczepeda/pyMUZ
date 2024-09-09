@@ -1,4 +1,4 @@
-### RT_qPCR.py ###
+### qPCR.py ###
 # Author: Marc Zepeda
 # Date: 2024-09-06
 
@@ -9,7 +9,7 @@ import numpy as np
 from ..gen import io as io
 from ..gen import plot as p
 
-# RT_qPCR data retrieval and analysis methods
+# qPCR data retrieval and analysis methods
 ''' cfx_Cq: Retrieve RT-qPCR data from CFX Cq csv
         pt: path to Cq csv file
         sample_col: column name with cDNA sample identifier (Default: Sample)

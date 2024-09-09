@@ -541,12 +541,12 @@ def RTT_designer(pegRNAs: pd.DataFrame, file: str, rtt_length: int=21, aa_index:
                                                   'First_extension_nucleotide': [rtt_in[0] for rtt_in in rtts_in]})]).reset_index(drop=True)
 
             # Obtain single deletion RTTs from + strand
-            edits_del = [f'{str(aa)}{rtt_wt_inframe_prot_indexes[i]}del' for i,aa in enumerate(rtt_wt_inframe_prot) if i<len(rtt_wt_inframe_prot)-1] # Don't want last AA
+            edits_del = [f'{str(aa)}{rtt_wt_inframe_prot_indexes[i]}del' for i,aa in enumerate(rtt_wt_inframe_prot) if i!=0] # Don't want first AA
             rtts_del = [Seq('').join([rtt_wt_inframe_nuc_codons_flank5, # Codon frame flank 5'
                         Seq('').join(rtt_wt_inframe_nuc_codons[:i]), # Codons before deletion
                         Seq('').join(rtt_wt_inframe_nuc_codons[i+1:]), # Codons after deletion
                         rtt_wt_inframe_nuc_codons_flank3]) # Codon frame flank 3'
-                        for i in range(len(rtt_wt_inframe_nuc_codons)) if i<len(rtt_wt_inframe_nuc_codons)-1] # Don't want last AA
+                        for i in range(len(rtt_wt_inframe_nuc_codons)) if i!=0] # Don't want first AA
             
             print(f'Deletions: {edits_del}')
             print(f'Deletion RTTs: {rtts_del}\n\n')
@@ -805,12 +805,19 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
                 edit_matches_explain.append(None) # No need to explain matching edits
             else: 
                 edit_matches.append(False)
-                if edit is not None:
-                    position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
-                    if (position==aa_index-1)&(pegRNAs.iloc[j]['Annotation']=='deletion'): edit_matches_explain.append('Common pegRNAs_tester() error: AA deletion outside of target sequence boundary results in wrong AA #')
-                    elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
-                    else: edit_matches_explain.append('Investigate: unknown error')
-                elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Common pegRNAs_tester() error: N-terminus AA deletion results in wildtype') 
+                if pegRNAs.iloc[j]['Annotation']=='deletion':
+                    if edit is not None:
+                        position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
+                        if position==aa_index-1: edit_matches_explain.append('Common pegRNAs_tester() error: AA deletion outside of target sequence boundary results in wrong AA #')
+                        else: edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
+                    else: edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
+                elif pegRNAs.iloc[j]['Annotation']=='insertion': 
+                    if edit is not None:
+                        position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
+                        position_predicted = [int(num) for num in re.findall(r'\d+', pegRNAs.iloc[j]['Edit'])][0] # Find predicted edit position
+                        if position-1==position_predicted: edit_matches_explain.append('Common pegRNAs_tester() error: inserted AA matches the next (+ strand) or previous (- strand) AA, so compare_RTTs() shifts mutation by 1 AA.')
+                        else: edit_matches_explain.append('Investigate insertion: common error for pegRNAs_tester() is single insertion of repeated AA results in wrong AA #')
+                    else: edit_matches_explain.append('Investigate insertion: common error for single insertion of final AA in RTT, which matches next AA and returns wildtype sequence')
                 else: edit_matches_explain.append('Investigate: unknown error')
 
         
@@ -912,12 +919,19 @@ def pegRNAs_tester(pegRNAs: pd.DataFrame, file: str, aa_index: int=1):
                 edit_matches_explain.append(None) # No need to explain matching edits
             else: 
                 edit_matches.append(False)
-                if edit is not None:
-                    position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
-                    if (position==aa_index-1)&(pegRNAs.iloc[j]['Annotation']=='deletion'): edit_matches_explain.append('Common pegRNAs_tester() error: AA deletion outside of target sequence boundary results in wrong AA #')
-                    elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
-                    else: edit_matches_explain.append('Investigate: unknown error')
-                elif pegRNAs.iloc[j]['Annotation']=='deletion': edit_matches_explain.append('Common pegRNAs_tester() error: N-terminus AA deletion results in wildtype') 
+                if pegRNAs.iloc[j]['Annotation']=='deletion':
+                    if edit is not None:
+                        position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
+                        if (position==aa_index-1)&(pegRNAs.iloc[j]['Annotation']=='deletion'): edit_matches_explain.append('Common pegRNAs_tester() error: AA deletion outside of target sequence boundary results in wrong AA #')
+                        else: edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
+                    else: edit_matches_explain.append('Investigate deletion: common error for pegRNAs_tester() is single deletion of repeated AA results in wrong AA #')
+                elif pegRNAs.iloc[j]['Annotation']=='insertion': 
+                    if edit is not None:
+                        position = [int(num) for num in re.findall(r'\d+', edit)][0] # Find actual edit position
+                        position_predicted = [int(num) for num in re.findall(r'\d+', pegRNAs.iloc[j]['Edit'])][0] # Find predicted edit position
+                        if position+1==position_predicted: edit_matches_explain.append('Common pegRNAs_tester() error: inserted AA matches the next (+ strand) or previous (- strand) AA, so compare_RTTs() shifts mutation by 1 AA.')
+                        else: edit_matches_explain.append('Investigate insertion: common error for pegRNAs_tester() is single insertion of repeated AA results in wrong AA #')
+                    else: edit_matches_explain.append('Investigate insertion: common error for single insertion of final AA in RTT, which matches next AA and returns wildtype sequence')
                 else: edit_matches_explain.append('Investigate: unknown error')
 
         else: 
