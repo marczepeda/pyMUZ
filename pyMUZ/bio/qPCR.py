@@ -7,7 +7,6 @@ import itertools
 import pandas as pd
 import numpy as np
 from ..gen import io as io
-from ..gen import plot as p
 
 # qPCR data retrieval and analysis methods
 ''' cfx_Cq: Retrieve RT-qPCR data from CFX Cq csv
