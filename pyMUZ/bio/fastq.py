@@ -395,7 +395,7 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_
     Dependencies: matplotlib,seaborn,aa_props
 '''
 def dms_grid(dc: dict,x='number',y='after',vals='count',
-             file=None,dir=None,edgecol='black',lw=1,annot=False,cmap="Reds",
+             file=None,dir=None,edgecol='black',lw=1,annot=False,cmap="bone_r",
              title='',title_size=12,title_weight='bold',
              x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,
              y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,

@@ -88,39 +88,7 @@ def formatter(typ:str,ax,df:pd.DataFrame,x:str,y:str,cols,file,dir,palette_or_cm
     cats = ['bar', 'box', 'violin', 'swarm', 'strip', 'point', 'count', 'bar_strip', 'box_strip', 'violin_strip','bar_swarm', 'box_swarm', 'violin_swarm']
     dists = ['hist', 'kde', 'hist_kde','rid']
     heats = ['ht']
-
-    # Set color scheme (Needs to be moved into individual plotting functions)
-    color_palettes = ["deep", "muted", "bright", "pastel", "dark", "colorblind", "husl", "hsv", "Paired", "Set1", "Set2", "Set3", "tab10", "tab20"] # List of common Seaborn palettes
-    if palette_or_cmap in color_palettes: sns.color_palette(palette_or_cmap)
-    elif palette_or_cmap in plt.colormaps(): 
-        if cols is not None: # Column specified
-            cmap = cm.get_cmap(palette_or_cmap,len(df[cols].value_counts()))
-            palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
-            # Add palette = palette
-        elif (x!='')&(y!=''): # x- and y-axis are specified
-            if df[x].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
-                cmap = cm.get_cmap(palette_or_cmap,len(df[x].value_counts()))
-                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
-                # Add palette = palette
-            elif df[y].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
-                cmap = cm.get_cmap(palette_or_cmap,len(df[y].value_counts()))
-                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
-                # Add palette = palette
-        elif (x!='')&(y==''): # x-axis is specified
-            if df[x].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
-                cmap = cm.get_cmap(palette_or_cmap,len(df[x].value_counts()))
-                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
-                # Add palette = palette
-        elif (x=='')&(y!=''): # y-axis is specified
-            if df[y].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
-                cmap = cm.get_cmap(palette_or_cmap,len(df[y].value_counts()))
-                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
-                # Add palette = palette
-        else: print('Legend colors, x-, and y-axis are not specified')
-    else: 
-        print('Seaborn color palette or matplotlib color map not specified. Used seaborn colorblind.')
-        sns.color_palette('colorblind')
-
+        
     if typ not in heats:
         # Set title
         if title=='' and file is not None: title=re_un_cap(file[-4])
@@ -196,41 +164,55 @@ def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=No
         for exclude in cols_exclude: df=df[df[cols]!=exclude]
     elif type(cols_exclude)==str: df=df[df[cols]!=cols_exclude]
 
+    # Set color scheme (Needs to be moved into individual plotting functions)
+    color_palettes = ["deep", "muted", "bright", "pastel", "dark", "colorblind", "husl", "hsv", "Paired", "Set1", "Set2", "Set3", "tab10", "tab20"] # List of common Seaborn palettes
+    if palette_or_cmap in color_palettes: palette = palette_or_cmap
+    elif palette_or_cmap in plt.colormaps(): 
+        if cols is not None: # Column specified
+            cmap = cm.get_cmap(palette_or_cmap,len(df[cols].value_counts()))
+            palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
+        else:
+            print('Cols not specified. Used seaborn colorblind.')
+            palette = 'colorblind'
+    else: 
+        print('Seaborn color palette or matplotlib color map not specified. Used seaborn colorblind.')
+        palette = 'colorblind'
+
     fig, ax = plt.subplots(figsize=figsize)
     
     if cols is not None and stys is not None:
-        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, edgecolor=edgecol, ax=ax, **kwargs)
-        elif typ=='line': sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, ax=ax, **kwargs)
+        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
+        elif typ=='line': sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, palette=palette, ax=ax, **kwargs)
         elif typ=='line_scat':
-            sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, ax=ax, **kwargs)  
-            sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, edgecolor=edgecol, ax=ax, **kwargs)
+            sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, palette=palette, ax=ax, **kwargs)  
+            sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, style=stys, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
         else:
             print("Invalid type! scat, line, or line_scat")
             return
     elif cols is not None:
-        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, ax=ax, **kwargs)
-        elif typ=='line': sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, ax=ax, **kwargs)
+        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
+        elif typ=='line': sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, ax=ax, palette=palette, **kwargs)
         elif typ=='line_scat':
-            sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, ax=ax, **kwargs)  
-            sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, ax=ax, **kwargs)
+            sns.lineplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, palette=palette, ax=ax, **kwargs)  
+            sns.scatterplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
         else:
             print("Invalid type! scat, line, or line_scat")
             return
     elif stys is not None:
-        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, style=stys, edgecolor=edgecol, ax=ax, **kwargs)
-        elif typ=='line': sns.lineplot(data=df, x=x, y=y, style=stys, ax=ax, **kwargs)
+        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, style=stys, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
+        elif typ=='line': sns.lineplot(data=df, x=x, y=y, style=stys, palette=palette, ax=ax, **kwargs)
         elif typ=='line_scat':
-            sns.lineplot(data=df, x=x, y=y, style=stys, ax=ax, **kwargs)  
-            sns.scatterplot(data=df, x=x, y=y, style=stys, edgecolor=edgecol, ax=ax, **kwargs)
+            sns.lineplot(data=df, x=x, y=y, style=stys, palette=palette, ax=ax, **kwargs)  
+            sns.scatterplot(data=df, x=x, y=y, style=stys, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
         else:
             print("Invalid type! scat, line, or line_scat")
             return
     else:
-        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, edgecolor=edgecol, ax=ax, **kwargs)
-        elif typ=='line': sns.lineplot(data=df, x=x, y=y, ax=ax, **kwargs)
+        if typ=='scat': sns.scatterplot(data=df, x=x, y=y, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
+        elif typ=='line': sns.lineplot(data=df, x=x, y=y, palette=palette, ax=ax, **kwargs)
         elif typ=='line_scat':
-            sns.lineplot(data=df, x=x, y=y, ax=ax, **kwargs)  
-            sns.scatterplot(data=df, x=x, y=y, edgecolor=edgecol, ax=ax, **kwargs)
+            sns.lineplot(data=df, x=x, y=y, palette=palette, ax=ax, **kwargs)  
+            sns.scatterplot(data=df, x=x, y=y, edgecolor=edgecol, palette=palette, ax=ax, **kwargs)
         else:
             print("Invalid type! scat, line, or line_scat")
             return
@@ -261,79 +243,111 @@ def cat(typ:str,df:pd.DataFrame,x='',y='',cols=None,cols_ord=None,cols_exclude=N
         for exclude in cols_exclude: df=df[df[cols]!=exclude]
     elif type(cols_exclude)==str: df=df[df[cols]!=cols_exclude]
 
+    # Set color scheme (Needs to be moved into individual plotting functions)
+    color_palettes = ["deep", "muted", "bright", "pastel", "dark", "colorblind", "husl", "hsv", "Paired", "Set1", "Set2", "Set3", "tab10", "tab20"] # List of common Seaborn palettes
+    if palette_or_cmap in color_palettes: palette = palette_or_cmap
+    elif palette_or_cmap in plt.colormaps(): 
+        if cols is not None: # Column specified
+            cmap = cm.get_cmap(palette_or_cmap,len(df[cols].value_counts()))
+            palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
+        elif (x!='')&(y!=''): # x- and y-axis are specified
+            if df[x].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
+                cmap = cm.get_cmap(palette_or_cmap,len(df[x].value_counts()))
+                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
+            elif df[y].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
+                cmap = cm.get_cmap(palette_or_cmap,len(df[y].value_counts()))
+                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
+        elif (x!='')&(y==''): # x-axis is specified
+            if df[x].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
+                cmap = cm.get_cmap(palette_or_cmap,len(df[x].value_counts()))
+                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
+                # Add palette = palette
+        elif (x=='')&(y!=''): # y-axis is specified
+            if df[y].apply(lambda row: isinstance(row, str)).all()==True: # Check x colum is categorical
+                cmap = cm.get_cmap(palette_or_cmap,len(df[y].value_counts()))
+                palette = sns.color_palette([cmap(i) for i in range(cmap.N)])
+                # Add palette = palette
+        else: return
+    else: 
+        print('Seaborn color palette or matplotlib color map not specified. Used seaborn colorblind.')
+        palette = 'colorblind'
+
     fig, ax = plt.subplots(figsize=figsize)
 
     if cols is not None:
-        if typ=='bar': sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='box': sns.boxplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='violin': sns.violinplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='swarm': sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
-        elif typ=='strip': sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
-        elif typ=='point': sns.pointplot(data=df, x=x, y=y, errorbar=errorbar, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, ax=ax, **kwargs)
+
+        if typ=='bar': sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+        elif typ=='box': sns.boxplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, linewidth=lw, palette=palette, ax=ax, **kwargs)
+        elif typ=='violin': sns.violinplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+        elif typ=='swarm': sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
+        elif typ=='strip': sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
+        elif typ=='point': sns.pointplot(data=df, x=x, y=y, errorbar=errorbar, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, palette=palette, ax=ax, **kwargs)
         elif typ=='count': 
             if (x!='')&(y!=''):
                 print('Cannot make countplot with both x and y specified.')
                 return
-            elif x!='': sns.countplot(data=df, x=x, hue=cols, hue_order=cols_ord, ax=ax, **kwargs)
-            elif y!='': sns.countplot(data=df, y=y, hue=cols, hue_order=cols_ord, ax=ax, **kwargs)
+            elif x!='': sns.countplot(data=df, x=x, hue=cols, hue_order=cols_ord, palette=palette, ax=ax, **kwargs)
+            elif y!='': sns.countplot(data=df, y=y, hue=cols, hue_order=cols_ord, palette=palette, ax=ax, **kwargs)
             else:
                 print('Cannot make countplot without x or y specified.')
                 return
         elif typ=='bar_strip':
-            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
+            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
         elif typ=='box_strip':
-            sns.boxplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, linewidth=lw, ax=ax, **kwargs)
-            sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
+            sns.boxplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
         elif typ=='violin_strip':
-            sns.violinplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
+            sns.violinplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.stripplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
         elif typ=='bar_swarm':
-            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
+            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
         elif typ=='box_swarm':
-            sns.boxplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, linewidth=lw, ax=ax, **kwargs)
-            sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
+            sns.boxplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
         elif typ=='violin_swarm':
-            sns.violinplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
+            sns.violinplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.swarmplot(data=df, x=x, y=y, hue=cols, hue_order=cols_ord, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
         else:
             print('Invalid type! bar, box, violin, swarm, strip, point, count, bar_strip, box_strip, violin_strip, bar_swarm, box_swarm, violin_swarm')
             return
-    else:
-        if typ=='bar': sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='box': sns.boxplot(data=df, x=x, y=y, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='violin': sns.violinplot(data=df, x=x, y=y, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='swarm': sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, dodge=True, ax=ax, **kwargs)
-        elif typ=='strip': sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-        elif typ=='point': sns.pointplot(data=df, x=x, y=y, errorbar=errorbar, errwidth=errwid, capsize=errcap, ax=ax, **kwargs)
+
+    else: # Cols was not specified
+        
+        if typ=='bar': sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+        elif typ=='box': sns.boxplot(data=df, x=x, y=y, linewidth=lw, ax=ax, palette=palette, **kwargs)
+        elif typ=='violin': sns.violinplot(data=df, x=x, y=y, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+        elif typ=='swarm': sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, dodge=True, palette=palette, ax=ax, **kwargs)
+        elif typ=='strip': sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+        elif typ=='point': sns.pointplot(data=df, x=x, y=y, errorbar=errorbar, errwidth=errwid, capsize=errcap, palette=palette, ax=ax, **kwargs)
         elif typ=='count': 
             if (x!='')&(y!=''):
                 print('Cannot make countplot with both x and y specified.')
                 return
-            elif x!='': sns.countplot(data=df, x=x, ax=ax, **kwargs)
-            elif y!='': sns.countplot(data=df, y=y, ax=ax, **kwargs)
+            elif x!='': sns.countplot(data=df, x=x, ax=ax, palette=palette, **kwargs)
+            elif y!='': sns.countplot(data=df, y=y, ax=ax, palette=palette, **kwargs)
             else:
                 print('Cannot make countplot without x or y specified.')
                 return
         elif typ=='bar_strip':
-            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
+            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
         elif typ=='box_strip':
             sns.boxplot(data=df, x=x, y=y, linewidth=lw, ax=ax, **kwargs)
-            sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
+            sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
         elif typ=='violin_strip':
-            sns.violinplot(data=df, x=x, y=y, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
+            sns.violinplot(data=df, x=x, y=y, edgecolor=edgecol, linewidth=lw, ax=ax, palette=palette, **kwargs)
+            sns.stripplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, palette=palette, **kwargs)
         elif typ=='bar_swarm':
-            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
+            sns.barplot(data=df, x=x, y=y, errorbar=errorbar, errcolor=edgecol, errwidth=errwid, capsize=errcap, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
         elif typ=='box_swarm':
-            sns.boxplot(data=df, x=x, y=y, linewidth=lw, ax=ax, **kwargs)
-            sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
+            sns.boxplot(data=df, x=x, y=y, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
         elif typ=='violin_swarm':
-            sns.violinplot(data=df, x=x, y=y, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
-            sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, ax=ax, **kwargs)
+            sns.violinplot(data=df, x=x, y=y, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
+            sns.swarmplot(data=df, x=x, y=y, color=edgecol, edgecolor=edgecol, linewidth=lw, palette=palette, ax=ax, **kwargs)
         else:
             print('Invalid type! bar, box, violin, swarm, strip, point, count, bar_strip, box_strip, violin_strip, bar_swarm, box_swarm, violin_swarm')
             return
@@ -349,6 +363,7 @@ def cat(typ:str,df:pd.DataFrame,x='',y='',cols=None,cols_ord=None,cols_exclude=N
         df: tidy dataframe
         x: x-axis column
     Dependencies: os, matplotlib, seaborn, formatter(), re_un_cap(), round_up_pow_10()
+        Note: Cannot set palette or cmap?
 '''
 def dist(typ: str,df: pd.DataFrame,x: str,cols=None,cols_ord=None,cols_exclude=None,bins=40,log10_low=0,
         file=None,dir=None,palette_or_cmap='colorblind',edgecol='black',lw=1,ht=1.5,asp=5,tp=.8,hs=0,des=False,
@@ -451,6 +466,7 @@ def dist(typ: str,df: pd.DataFrame,x: str,cols=None,cols_ord=None,cols_exclude=N
         x: x-axis
         y: y-axis
     Dependencies: os, matplotlib, seaborn, formatter(), re_un_cap(), round_up_pow_10()
+        Note: Needs to be updated to be similar to dms_grid()
 '''
 def heat(df: pd.DataFrame, x: str, y: str, vars='variable', vals='value', typ='ht',
          file=None,dir=None,palette_or_cmap='colorblind',edgecol='black',lw=1,annot=False,cmap="Reds",sq=True,
