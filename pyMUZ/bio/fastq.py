@@ -358,7 +358,7 @@ def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=No
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
 def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],
-          file=None,dir=None,color_palette='Set2',
+          file=None,dir=None,cmap='Set2',
           title='Editing Outcomes',title_size=18,title_weight='bold',
           figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
           y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,
@@ -380,7 +380,7 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_
     
     # Make stacked barplot
     p.stack(df=df,x=x,y=y,cols=cols,cutoff=cutoff,cols_ord=cols_ord,
-          file=file,dir=dir,color_palette=color_palette,
+          file=file,dir=dir,cmap=cmap,
           title=title,title_size=title_size,title_weight=title_weight,
           figsize=figsize,x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,x_ticks_ha=x_ticks_ha,
           y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_ticks_rot=y_ticks_rot,

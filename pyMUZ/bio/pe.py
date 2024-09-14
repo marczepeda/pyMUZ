@@ -130,9 +130,9 @@ def PrimeDesignOutput(pt: str, aa_index: int=1,
     ngRNAs = primeDesign_output[primeDesign_output['gRNA_type']=='ngRNA'].reset_index(drop=True)
 
     # Generate epegRNAs
-    pegRNAs['Edit']=[str(target_name.split('_')[2].split('to')[0]) + # AA Before
-                    str(int(target_name.split('_')[1]) + aa_index-1) + # AA Index
-                    str(target_name.split('_')[2].split('to')[1]) # AA After
+    pegRNAs['Edit']=[str(target_name.split('_')[-1].split('to')[0]) + # AA Before
+                    str(int(target_name.split('_')[-2]) + aa_index-1) + # AA Index
+                    str(target_name.split('_')[-1].split('to')[1]) # AA After
                     for target_name in pegRNAs['Target_name']]
     pegRNAs['Scaffold_sequence']=[scaffold_sequence]*len(pegRNAs)
     pegRNAs['RTT_sequence']=[pegRNAs.iloc[i]['Extension_sequence'][0:int(pegRNAs.iloc[i]['RTT_length'])] for i in range(len(pegRNAs))]
@@ -142,9 +142,9 @@ def PrimeDesignOutput(pt: str, aa_index: int=1,
                      'Target_name','Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','ngRNA-to-pegRNA_distance','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide']] # Less important metadata
 
     # Generate ngRNAs
-    ngRNAs['Edit']=[str(target_name.split('_')[2].split('to')[0]) + # AA Before
-                    str(int(target_name.split('_')[1]) + aa_index-1) + # AA Index
-                    str(target_name.split('_')[2].split('to')[1]) # AA After
+    ngRNAs['Edit']=[str(target_name.split('_')[-1].split('to')[0]) + # AA Before
+                    str(int(target_name.split('_')[-2]) + aa_index-1) + # AA Index
+                    str(target_name.split('_')[-1].split('to')[1]) # AA After
                     for target_name in ngRNAs['Target_name']]
     ngRNAs['Scaffold_sequence']=[scaffold_sequence]*len(ngRNAs)
     ngRNAs['ngRNA_number']=list(np.arange(len(ngRNAs)))
@@ -164,11 +164,13 @@ def PrimeDesignOutput(pt: str, aa_index: int=1,
     Dependencies: pandas,pegLIT,io
 '''
 def epegRNA_linkers(pegRNAs: pd.DataFrame, epegRNA_motif_sequence: str='CGCGGTTCTATCTAGTTACGCGTTAAACCAACTAGAA',
-                    checkpoint_dir: str=None, checkpoint_file=None, checkpoint_pt: str=None):
+                    checkpoint_dir: str=None, checkpoint_file=None, checkpoint_pt: str=''):
     
     # Get or make checkpoint DataFrame
-    if checkpoint_pt: checkpoint = pd.DataFrame(columns=['pegRNA_number','Linker_sequence'])
-    else: checkpoint = io.get(pt=checkpoint_pt)
+    if checkpoint_dir is not None and checkpoint_file is not None: # Save checkpoints
+        if checkpoint_pt=='': checkpoint = pd.DataFrame(columns=['pegRNA_number','Linker_sequence'])
+        else: checkpoint = io.get(pt=checkpoint_pt)
+    else: checkpoint = '' # Don't save checkpoints, length needs to 0.
 
     # Generate epegRNA linkers between PBS and 3' hairpin motif
     linkers = []
@@ -177,7 +179,7 @@ def epegRNA_linkers(pegRNAs: pd.DataFrame, epegRNA_motif_sequence: str='CGCGGTTC
             linkers.extend(pegLIT.pegLIT(seq_spacer=pegRNAs.iloc[i]['Spacer_sequence'],seq_scaffold=pegRNAs.iloc[i]['Scaffold_sequence'],
                                         seq_template=pegRNAs.iloc[i]['RTT_sequence'],seq_pbs=pegRNAs.iloc[i]['PBS_sequence'],
                                         seq_motif=epegRNA_motif_sequence))
-            if checkpoint_dir is not None & checkpoint_file is not None: # Save checkpoints
+            if checkpoint_dir is not None and checkpoint_file is not None: # Save checkpoints
                 checkpoint = pd.concat([checkpoint,pd.DataFrame({'pegRNA_number': [i], 'Linker_sequence': [linkers[i]]})])
                 io.save(dir=checkpoint_dir,file=checkpoint_file,obj=checkpoint)
             print(f'Status: {i} out of {len(pegRNAs)}')
@@ -598,6 +600,7 @@ def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexe
         return None
     
     elif annotation=='insertion': # Insertion
+        i_diff=-1
         if strand=='+':
             for i in range(len(rtt_wt_prot)): # Find difference starting from 5' end (N-term)
                 if rtt_prot[i] != rtt_wt_prot[i]:
@@ -616,6 +619,7 @@ def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexe
             return edit
     
     elif annotation=='deletion': # Deletion
+        i_diff=-1
         if strand=='+':
             for i in range(len(rtt_wt_prot)): # Find difference starting from 5' end (N-term)
                 if rtt_prot[i] != rtt_wt_prot[i]:
@@ -635,11 +639,12 @@ def compare_RTTs(rtt_prot,rtt_prot_indexes: list,rtt_wt_prot, rtt_wt_prot_indexe
         else: print('Error: Strand must be "+" or "-"')
 
     else: # Substitution
+        i_diff=-1
         for i in range(len(rtt_prot)): # Find difference
             if rtt_prot[i] != rtt_wt_prot[i]:
                 i_diff = i
                 break
-        edit = f'{rtt_wt_prot[i_diff]}{rtt_wt_prot_indexes[i_diff]}{rtt_prot[i_diff]}'
+        edit = f'{rtt_wt_prot[i_diff]}{rtt_prot_indexes[i_diff]}{rtt_prot[i_diff]}'
         print(f'Substitution Edit: {edit}\n')
         return edit
         
