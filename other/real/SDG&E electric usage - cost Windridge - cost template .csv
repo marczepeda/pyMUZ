@@ -1,4 +1,4 @@
-,Period,,$/kWh,Solar Production (kWh),Home Usage (kWh),Cost ,Net Grid Energy(kWh),Cumulative Solar Production (kWh),Cumulative Home Usage (kWh),Cumulative Net Grid Energy (kWh),Accumulative Cost
+Date Category,Period,Time Category,$/kWh,Solar Production (kWh),Home Usage (kWh),Cost ,Net Grid Energy(kWh),Cumulative Solar Production (kWh),Cumulative Home Usage (kWh),Cumulative Net Grid Energy (kWh),Accumulative Cost
 Weekend,"Sunday, 9/01/2024 - 12:00am - 1:00am",Super Off-Peak,$0.0451,0.01,0.86,$0.04,0.85,0.01,0.86,0.85,$0.04
 Weekend,"Sunday, 9/01/2024 - 1:00am - 2:00am",Super Off-Peak,$0.0451,0.01,0.67,$0.03,0.66,0.02,1.53,1.51,$0.07
 Weekend,"Sunday, 9/01/2024 - 2:00am - 3:00am",Super Off-Peak,$0.0451,0.01,0.84,$0.04,0.83,0.03,2.37,2.34,$0.11
@@ -30,7 +30,7 @@ Weekday,"Monday, 9/02/2024 - 3:00am - 4:00am",Super Off-Peak,$0.0451,0.01,0.7,$0
 Weekday,"Monday, 9/02/2024 - 4:00am - 5:00am",Super Off-Peak,$0.0451,0.01,1.57,$0.07,1.56,32.08,37.04,4.96,$6.22
 Weekday,"Monday, 9/02/2024 - 5:00am - 6:00am",Super Off-Peak,$0.0451,0,0.98,$0.04,0.98,32.08,38.02,5.94,$6.26
 Weekday,"Monday, 9/02/2024 - 6:00am - 7:00am",Off-Peak,$0.1452,0.02,0.96,$0.14,0.94,32.1,38.98,6.88,$6.40
-,"Monday, 9/02/2024 - 7:00am - 8:00am",Off-Peak,$0.1452,0.22,0.73,$0.11,0.51,32.32,39.71,7.39,$6.51
+Weekday,"Monday, 9/02/2024 - 7:00am - 8:00am",Off-Peak,$0.1452,0.22,0.73,$0.11,0.51,32.32,39.71,7.39,$6.51
 Weekday,"Monday, 9/02/2024 - 8:00am - 9:00am",Off-Peak,$0.1452,0.8,0.76,$0.11,-0.04,33.12,40.47,7.35,$6.62
 Weekday,"Monday, 9/02/2024 - 9:00am - 10:00am",Off-Peak,$0.1452,1.93,0.97,$0.14,-0.96,35.05,41.44,6.39,$6.76
 Weekday,"Monday, 9/02/2024 - 10:00am - 11:00am",Off-Peak,$0.1452,2.91,1.28,$0.19,-1.63,37.96,42.72,4.76,$6.94

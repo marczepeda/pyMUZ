@@ -520,7 +520,7 @@ def heat(df: pd.DataFrame, x: str, y: str, vars='variable', vals='value', typ='h
         cutoff: y-axis values needs be greater than (ex: 0%)
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
-def stack(df: pd.DataFrame,x:str,y:str,cols:str,cutoff=0,cols_ord=[],
+def stack(df: pd.DataFrame,x:str,y:str,cols:str,cutoff=0,cols_ord=[],x_ord=[],
           file=None,dir=None,cmap='Set2',errcap=4,
           figsize=(10,6),title='',title_size=18,title_weight='bold',
           x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
@@ -533,7 +533,8 @@ def stack(df: pd.DataFrame,x:str,y:str,cols:str,cutoff=0,cols_ord=[],
     df_pivot=pd.pivot_table(df_cut, index=x, columns=cols, values=y, aggfunc=np.mean)
     df_pivot_err=pd.pivot_table(df_cut, index=x, columns=cols, values=y, aggfunc=np.std)
     if cols_ord!=[]: df_pivot=df_pivot[cols_ord]
-    
+    if x_ord!=[]: df_pivot=df_pivot.reindex(x_ord)
+
     # Make stacked barplot
     df_pivot.plot(kind='bar',yerr=df_pivot_err,capsize=errcap, figsize=figsize,colormap=cmap,stacked=True,**kwargs)
 

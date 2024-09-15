@@ -89,7 +89,8 @@ def get_fastqs(dir: str,suf='.fastq.gz',quality=0,compressed=True):
                         phred_scores.append(record.letter_annotations['phred_quality'])
         fastqs[fastq_file[:-len(suf)]]=pd.DataFrame({'id':ids, # Add dataframe to dictionary 
                                                      'seq':seqs,
-                                                     'phred_scores':phred_scores}) 
+                                                     'phred_scores':phred_scores})
+        print(f'{fastq_file[:-len(suf)]}: {len(fastqs[fastq_file[:-len(suf)]])} reads')
     return fastqs
 
 ''' filter_fastqs: Gets DNA and AA sequence for records within flanks
@@ -114,16 +115,14 @@ def filter_fastqs(fastqs: dict, flank5='TCTCTCCGTCCCAGGA',flank3='GGTAGGTCCCCTGG
         nuc=[]
         prot=[]
         low_phred=[]
-        print(len(fastq))
         for i,seq in enumerate(fastq['seq']):
             nuc.append(seq[seq.find(flank5)+len(flank5):seq.find(flank3)])
             prot.append(Seq.translate(seq[seq.find(flank5)+len(flank5):seq.find(flank3)]))
             if quality>min(fastq.iloc[i]['phred_scores'][seq.find(flank5)+len(flank5):seq.find(flank3)]): low_phred.append(i)
         fastqs_1[file]['nuc']=nuc
         fastqs_1[file]['prot']=prot
-        print(low_phred)
         fastqs_1[file] = fastq.drop(low_phred).reset_index(drop=True)
-        print(len(fastqs_1[file]))
+        print(f'{file}: {len(fastqs_1[file])} reads')
     
     return fastqs_1
 
@@ -287,7 +286,7 @@ def subscript(df: pd.DataFrame,tick='before',tick_sub='number'):
     Dependencies: os, matplotlib, seaborn, plot.py
 '''
 def cat(typ: str,df: pd.DataFrame,x: str,y: str,errorbar=None,cols=None,cols_ord=None,cutoff=0.01,cols_exclude=None,
-        file=None,dir=None,color_palette='colorblind',edgecol='black',lw=1,
+        file=None,dir=None,palette_or_cmap='colorblind',edgecol='black',lw=1,
         figsize=(10,6),title='',title_size=18,title_weight='bold',
         x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,1),x_ticks_rot=0,xticks=[],
         y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,1),y_ticks_rot=0,yticks=[],
@@ -313,7 +312,7 @@ def cat(typ: str,df: pd.DataFrame,x: str,y: str,errorbar=None,cols=None,cols_ord
         cols_ord = list(assign.sort_values(by='positions')['genotypes'])
 
     p.cat(typ=typ,df=df,x=x,y=y,errorbar=errorbar,cols=cols,cols_ord=cols_ord,cols_exclude=None,
-        file=file,dir=dir,color_palette=color_palette,edgecol=edgecol,lw=lw,
+        file=file,dir=dir,palette_or_cmap=palette_or_cmap,edgecol=edgecol,lw=lw,
         figsize=figsize,title=title,title_size=title_size,title_weight=title_weight,
         x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_axis_scale=x_axis_scale,x_axis_dims=x_axis_dims,x_ticks_rot=x_ticks_rot,xticks=xticks,
         y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_axis_scale=y_axis_scale,y_axis_dims=y_axis_dims,y_ticks_rot=y_ticks_rot,yticks=yticks,
@@ -328,7 +327,7 @@ def cat(typ: str,df: pd.DataFrame,x: str,y: str,errorbar=None,cols=None,cols_ord
     Dependencies: os, matplotlib, seaborn, plot.py
 '''
 def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=None,cutoff=0.01,cols_exclude=None,
-         file=None,dir=None,color_palette='colorblind',edgecol='black',
+         file=None,dir=None,palette_or_cmap='colorblind',edgecol='black',
          figsize=(10,6),title='',title_size=18,title_weight='bold',
          x_axis='',x_axis_size=12,x_axis_weight='bold',x_axis_scale='linear',x_axis_dims=(0,100),x_ticks_rot=0,xticks=[],
          y_axis='',y_axis_size=12,y_axis_weight='bold',y_axis_scale='linear',y_axis_dims=(0,100),y_ticks_rot=0,yticks=[],
@@ -342,7 +341,7 @@ def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=No
     else: df=df[df[cols]!=cols_exclude]
 
     p.scat(typ=typ,df=df,x=x,y=y,cols=cols,cols_ord=cols_ord,cols_exclude=None,
-        file=file,dir=dir,color_palette=color_palette,edgecol=edgecol,
+        file=file,dir=dir,palette_or_cmap=palette_or_cmap,edgecol=edgecol,
         figsize=figsize,title=title,title_size=title_size,title_weight=title_weight,
         x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_axis_scale=x_axis_scale,x_axis_dims=x_axis_dims,x_ticks_rot=x_ticks_rot,xticks=xticks,
         y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_axis_scale=y_axis_scale,y_axis_dims=y_axis_dims,y_ticks_rot=y_ticks_rot,yticks=yticks,
@@ -357,7 +356,7 @@ def scat(typ: str,df: pd.DataFrame,x: str,y: str,cols=None,cols_ord=None,stys=No
         cutoff: y-axis values needs be greater than (ex: 1%)
     Dependencies: plot.py,re,os,pandas,numpy,matplotlib.pyplot
 '''
-def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],
+def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_ord=[],x_ord=[],
           file=None,dir=None,cmap='Set2',
           title='Editing Outcomes',title_size=18,title_weight='bold',
           figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
@@ -379,7 +378,7 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_
         cols_ord = list(assign.sort_values(by='positions')['genotypes'])
     
     # Make stacked barplot
-    p.stack(df=df,x=x,y=y,cols=cols,cutoff=cutoff,cols_ord=cols_ord,
+    p.stack(df=df,x=x,y=y,cols=cols,cutoff=cutoff,cols_ord=cols_ord,x_ord=x_ord,
           file=file,dir=dir,cmap=cmap,
           title=title,title_size=title_size,title_weight=title_weight,
           figsize=figsize,x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,x_ticks_ha=x_ticks_ha,
