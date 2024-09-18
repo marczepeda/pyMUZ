@@ -362,7 +362,7 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_
           figsize=(10,6),x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
           y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,
           legend_title='',legend_title_size=12,legend_size=12,
-          legend_bbox_to_anchor=(1,1),legend_loc='upper left',**kwargs):
+          legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_ncol=1,**kwargs):
     
     # Omit smaller than cutoff and sort pivot table columns by genotype position
     df_cut=df[df[y]>cutoff]
@@ -384,7 +384,7 @@ def stack(df: pd.DataFrame,x='sample',y='fraction',cols='edit',cutoff=0.01,cols_
           figsize=figsize,x_axis=x_axis,x_axis_size=x_axis_size,x_axis_weight=x_axis_weight,x_ticks_rot=x_ticks_rot,x_ticks_ha=x_ticks_ha,
           y_axis=y_axis,y_axis_size=y_axis_size,y_axis_weight=y_axis_weight,y_ticks_rot=y_ticks_rot,
           legend_title=legend_title,legend_title_size=legend_title_size,legend_size=legend_size,
-          legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,**kwargs)
+          legend_bbox_to_anchor=legend_bbox_to_anchor,legend_loc=legend_loc,legend_ncol=legend_ncol,**kwargs)
 
 ''' dms_grid: Creates amino acide by residue number heatmaps from tidy-formatted DMS data
         dc: Tidy-formatted DMS dictionary

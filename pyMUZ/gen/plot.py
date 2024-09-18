@@ -526,7 +526,7 @@ def stack(df: pd.DataFrame,x:str,y:str,cols:str,cutoff=0,cols_ord=[],x_ord=[],
           x_axis='',x_axis_size=12,x_axis_weight='bold',x_ticks_rot=45,x_ticks_ha='right',
           y_axis='',y_axis_size=12,y_axis_weight='bold',y_ticks_rot=0,
           legend_title='',legend_title_size=12,legend_size=12,
-          legend_bbox_to_anchor=(1,1),legend_loc='upper left',**kwargs):
+          legend_bbox_to_anchor=(1,1),legend_loc='upper left',legend_ncol=1,**kwargs):
     
     # Make pivot table
     df_cut=df[df[y]>cutoff]
@@ -555,7 +555,7 @@ def stack(df: pd.DataFrame,x:str,y:str,cols:str,cutoff=0,cols_ord=[],x_ord=[],
     # Set legend
     if legend_title=='': legend_title=re_un_cap(cols)
     plt.legend(title=legend_title, title_fontsize=legend_title_size, fontsize=legend_size, 
-               bbox_to_anchor=legend_bbox_to_anchor, loc=legend_loc)
+               bbox_to_anchor=legend_bbox_to_anchor, loc=legend_loc, ncol=legend_ncol)
     
     # Save & show fig
     if file is not None and dir is not None:

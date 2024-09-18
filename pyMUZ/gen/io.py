@@ -5,7 +5,8 @@
 # Import packages
 import pandas as pd
 import os
-import csv as c
+import ast
+import csv
 
 # Input methods
 ''' get: Returns pandas dataframe from csv file.
@@ -56,7 +57,7 @@ def save(dir: str, file: str, obj, cols=[], id=False, sort=True, **kwargs):
         if sort==True: obj2 = sorted(list(obj))
         else: obj2=list(obj)
         with open(os.path.join(dir,file), 'w', newline='') as csv_file:
-            csv_writer = c.writer(csv_file, dialect='excel') # Create a CSV writer object
+            csv_writer = csv.writer(csv_file, dialect='excel') # Create a CSV writer object
             csv_writer.writerow(obj2) # Write each row of the list to the CSV file
 
 ''' save_dir: Save .csv files to a specified output directory from dictionary of objs
@@ -65,7 +66,7 @@ def save(dir: str, file: str, obj, cols=[], id=False, sort=True, **kwargs):
         dc: dictionary of objs
     Dependencies: pandas,os,csv, save()
 '''
-def save_dir(dir: str, file_suffix: str, dc, **kwargs):
+def save_dir(dir: str, file_suffix: str, dc: dict, **kwargs):
     for key,val in dc.items(): save(dir=dir,file=key+file_suffix,obj=val,**kwargs)
 
 # Input/Output Methods
@@ -80,3 +81,30 @@ def excel_csvs(pt: str,dir='',**kwargs):
     for sheet_name in pd.ExcelFile(pt).sheet_names: # Loop through each sheet in the Excel file
         df = pd.read_excel(pd.ExcelFile(pt),sheet_name,**kwargs) # Read the sheet into a DataFrame
         df.to_csv(os.path.join(dir,f"{sheet_name}.csv"),index=False) # Save the DataFrame to a CSV file
+
+''' df_to_dc_txt: Returns pandas DataFrame as a printed text that resembles a Python dictionary.
+        df: pandas dataframe
+    Dependencies: pandas
+'''
+def df_to_dc_txt(df: pd.DataFrame):
+    dict_text = "{\n"
+    for index, row in df.iterrows():
+        dict_text += f"  {index}: {{\n"
+        for col in df.columns:
+            value = row[col]
+            if isinstance(value, str):
+                value = f"'{value}'"
+            dict_text += f"    '{col}': {value},\n"
+        dict_text = dict_text.rstrip(",\n") + "\n  },\n"  # Remove trailing comma for last key-value pair
+    dict_text = dict_text.rstrip(",\n") + "\n}"  # Close the main dictionary
+    print(dict_text)
+    return dict_text
+
+''' dc_txt_to_df: Returns a pandas DataFrame from text that resembles a Python dictionary.
+        dc_txt: text that resembles a Python dictionary
+        transpose: transpose dataframe (Default: True)
+    Dependencies: pandas,ast
+'''
+def dc_txt_to_df(dc_txt: str, transpose=True):
+    if transpose==True: return pd.DataFrame(ast.literal_eval(dc_txt)).T
+    else: return pd.DataFrame(ast.literal_eval(dc_txt))
