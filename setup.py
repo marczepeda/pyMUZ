@@ -27,6 +27,11 @@ setup(
                       'pandas',
                       'biopython',
                       'requests',
+                      'scipy',
+                      'statsmodels',
+                      'scikit-learn',
+                      'Levenshtein',
+                      'ViennaRNA',
                       'selenium'],
     python_requires='>=3.11'
 )
