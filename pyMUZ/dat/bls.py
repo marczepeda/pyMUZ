@@ -8,6 +8,8 @@ import json
 import requests
 import time
 from ..gen import tidy as t
+from ..gen import io as io
+from ..gen import plot as p
 
 # Series ID methods
 ''' series_ids: Returns dataframe containing series ids and corresponding metadata
@@ -230,3 +232,40 @@ def api_batch(series_ids: list, start_year, end_year, api_v='2', **kwargs):
 
         try: return t.join(dc,'batch_years-series_ids') # Returns concatenated dataframe
         except Exception: return dc # Returns dictionary of dataframes
+
+# Data Wrangling Methods
+''' convert_str_output: Converts strings to numerical values within BLS output dataframe
+        data: BLS output dataframe
+        dir: save directory (optional)
+        file: save filename (optional)
+    Depedencies: io
+'''
+def convert_str_output(data: pd.DataFrame(), dir: str=None, file: str=None):
+    data['year']=[int(year) for year in data['year']]
+    data['value']=[float(value) for value in data['value']]
+    data['year_period']=[int(year)+(float(period[1:])-1)/13 for year,period in zip(data['year'],data['period'])]
+    if dir is not None and file is not None: io.save(dir,file,data)
+    return data
+
+''' scat_series_ids: Plots times series from BLS output dataframe
+        data: BLS output dataframe
+        dir: save directory (optional)
+    Depedencies: plot
+'''
+def scat_series_ids(data: pd.DataFrame(), dir: str=None):
+    seriesIDs = list(data['seriesID'].value_counts().keys())
+    value_max = max(data['value'])
+
+    for seriesID in seriesIDs:
+        data_seriesID = data[data['seriesID']==seriesID]
+        value_max = max(data_seriesID['value'])
+        graph_max = int((value_max+10)/10)*10
+
+        p.scat(typ='line',df=data_seriesID,x='year_period',y='value',
+            y_axis_dims=(0,graph_max),
+            title=f"{data_seriesID.iloc[0]['catalog.commerce_industry']}:\n{data_seriesID.iloc[0]['catalog.area']}",
+            y_axis=f"{data_seriesID.iloc[0]['catalog.measure_data_type']}",
+            x_axis=f"Year",
+            figsize=(10,5),
+            dir=dir,
+            file=f"{data_seriesID.iloc[0]['catalog.commerce_industry']}_{data_seriesID.iloc[0]['catalog.area']}.png".replace('/','-'))
