@@ -9,26 +9,33 @@ import numpy as np
 from ..gen import io as io
 
 # qPCR data retrieval and analysis methods
-''' cfx_Cq: Retrieve RT-qPCR data from CFX Cq csv
-        pt: path to Cq csv file
-        sample_col: column name with cDNA sample identifier (Default: Sample)
-        cols: list of column names to retain (Default: ['Well','Fluor','Target','Sample','Cq'])
-    Dependencies: io
-'''
 def cfx_Cq(pt: str, sample_col:str='Sample', cols=['Well','Fluor','Target','Sample','Cq']):
+    ''' 
+    cfx_Cq(): retrieve RT-qPCR data from CFX Cq csv
+    
+    Parameters:
+    pt (str): path to Cq csv file
+    sample_col (str, optional): column name with cDNA sample identifier (Default: Sample)
+    cols (list): list of column names to retain (Default: ['Well','Fluor','Target','Sample','Cq'])
+    
+    Dependencies: io
+    '''
     data = io.get(pt).dropna(subset=[sample_col])[cols]
     data[sample_col] = [int(cDNA) if type(cDNA)==float else cDNA for cDNA in data[sample_col]]
     return data
 
-''' ddCq: Computes ΔΔCq mean and error for all samples holding target pairs constant
-        pt: path to Cq csv file
-        sample_col: column name with cDNA sample identifier (Default: Sample)
-        target_col: column name with target identifier (Default: Target)
-        Cq_col: column name with Cq value (Default: Cq)
-    Dependencies: pandas,numpy,itertools
-'''
 def ddCq(data: pd.DataFrame, sample_col:str='Sample', target_col:str='Target', Cq_col:str='Cq'):
+    ''' 
+    ddCq(): computes ΔΔCq mean and error for all samples holding target pairs constant
     
+    Parameters:
+    df (dataframe): Cq pandas dataframe
+    sample_col (str, optional): column name with cDNA sample identifier (Default: Sample)
+    target_col (str, optional): column name with target identifier (Default: Target)
+    Cq_col (str, optional): column name with Cq value (Default: Cq)
+    
+    Dependencies: pandas, numpy, & itertools
+    '''
     # Get sample and target lists
     sample_ls = list(data[sample_col].value_counts().keys())
     target_ls = list(data[target_col].value_counts().keys())

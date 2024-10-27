@@ -16,14 +16,17 @@ from ..gen import tidy as t
 
 
 # HTML Methods
-''' get_html: Obtains html file from the internet
-        url: website url for html file
-        file: saved file name
-        dir: saved file directory
-    Dependencies: os,requests
-'''
-def get_html(url: str(),file=None,dir=None):
+def get_html(url: str,file=None,dir=None):
+    ''' 
+    get_html(): obtains html file from the internet
     
+    Parameters:
+    url (str): website url for html file
+    file (str, optional): saved file name
+    dir (str, optional): saved file directory
+    
+    Dependencies: os & requests
+    '''
     try: # Send a GET request to the URL
         response = requests.get(url)
         if response.status_code == 200: # Check if the request was successful
@@ -35,28 +38,35 @@ def get_html(url: str(),file=None,dir=None):
         return response.text
     except Exception as e: print(f"An error occurred: {e}")
 
-''' search: Returns & print blocks of text that contains substring
-        url: website url
-        sub: substring
-        within: blocks of text that contain substring
+def search(url: str, sub: str, within='\n'):
+    ''' 
+    search(): returns & print blocks of text that contains substring
+    
+    Parameters:
+    url (str): website url
+    sub (str): substring
+    within (str, optional): blocks of text that contain substring
+    
     Dependencies: get_html()
-'''
-def search(url: str(), sub: str(), within='\n'):
+    '''
     texts=[block for block in get_html(url=url).split(within) if sub in block] # Isolate blocks of text that contain substring
     for text in texts: print(f'"{sub}" found between "{within}": {text}') # Print texts
     return texts
 
 # Selenium Methods
-''' handle_dropdowns: Recursively handle the next dropdown in the list
-        dc: dictionary
-        prev_option: previous dropdown menu selection
-        driver: Selenium WebDriver (Chrome)
-        dropdown_ids: list of dropdown menu ids (strings)
-        current_index: enables iteration through dropdown_ids
-    Dependencies: selenium,time
-'''
-def handle_dropdowns(dc: dict(), prev_option: str(), driver, dropdown_ids, current_index=1):
+def handle_dropdowns(dc: dict, prev_option: str, driver, dropdown_ids, current_index=1):
+    ''' 
+    handle_dropdowns(): recursively handle the next dropdown in the list
     
+    Parameters:
+    dc (dict): dictionary
+    prev_option (str): previous dropdown menu selection
+    driver: Selenium WebDriver (Chrome)
+    dropdown_ids: list of dropdown menu ids (strings)
+    current_index (int, optional): enables iteration through dropdown_ids
+    
+    Dependencies: selenium & time
+    '''
     if current_index >= len(dropdown_ids): # Base case: If we've handled all dropdowns, return
         return
 
@@ -91,17 +101,20 @@ def handle_dropdowns(dc: dict(), prev_option: str(), driver, dropdown_ids, curre
     except NotImplementedError: # Handle not implemented error
         print(f"Not Implemented Error:\nPrevious option: {prev_option}\nCurrent Index: \n{current_index}\nj: {j}\nOption: {option}")
 
-''' get_dropdown_options: Returns dictionary of dropdown menu options that depend on each other.
-        url: website url
-        dropdown_ids: list of dropdown menu ids (strings)
-        dir: directory to save checkpoints (optional)
-        file: file name to save checkpoints (optional)
-        dc_checkpoint: dictionary from last save checkpoint (optional)
-        dc_checkpoint: index of last save checkpoint (optional)
-    Dependencies: selenium,time,tidy,io,handle_dropdowns()
-'''
-def get_dropdown_options(url: str(), dropdown_ids: list(), dir=None, file=None, dc_checkpoint={},dc_checkpoint_i=0):
+def get_dropdown_options(url: str, dropdown_ids: list, dir=None, file=None, dc_checkpoint={},dc_checkpoint_i=0):
+    ''' 
+    get_dropdown_options(): returns dictionary of dropdown menu options that depend on each other.
     
+    Parameters:
+    url (str): website url
+    dropdown_ids (list): list of dropdown menu ids (strings)
+    dir (str, optional): directory to save checkpoints
+    file (str, optional): file name to save checkpoints
+    dc_checkpoint (dict, optional): dictionary from last save checkpoint
+    dc_checkpoint_i (int, optional): index of last save checkpoint
+    
+    Dependencies: selenium, time, tidy, io, & handle_dropdowns()
+    '''
     driver = webdriver.Chrome() # Set up the Selenium WebDriver (Chrome in this case)
     
     try:

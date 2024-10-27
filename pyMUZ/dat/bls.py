@@ -12,16 +12,18 @@ from ..gen import io as io
 from ..gen import plot as p
 
 # Series ID methods
-''' series_ids: Returns dataframe containing series ids and corresponding metadata
-        ls: list from dc_to_ls()
-        dropdown_ids: column names
-        sep: seperator from sep (optional, default: '.')
-        exclude: trailing value from dc_to_ls (optional, default: '.None')
-        pre: series id prefix (optional)
-    Dependencies: pandas
-'''
 def series_ids(ls: list, dropdown_ids: list, sep='.',exclude='.None', pre=''):
+    ''' 
+    series_ids(): returns dataframe containing series ids and corresponding metadata
     
+    ls (list): list from dc_to_ls()
+    dropdown_ids (list): column names
+    sep (str, optional): seperator from sep (Default: '.')
+    exclude (str, optional): trailing value from dc_to_ls (Default: '.None')
+    pre (str, optional): series id prefix
+
+    Dependencies: pandas
+    '''
     # Clean list by removing trailing value (exclude) and truncated series
     ls = [l.split(exclude)[0] for l in ls]
     print(f'Removed truncated series: {[l for l in ls if len(l.split(sep))!=len(dropdown_ids)]}')
@@ -42,22 +44,29 @@ def series_ids(ls: list, dropdown_ids: list, sep='.',exclude='.None', pre=''):
     # Generate dataframe using list of dicts from metas and set index using ids
     return pd.DataFrame([dict(zip(dropdown_ids, row)) for row in metas],index=pd.Index(ids,name='series_id')).reset_index()
 
-''' cols_with_subs: Returns list of dataframe columns with substring
-        df: Dataframe
-        sub: Substring
-    Dependencies: pandas
-'''
 def cols_with_subs(df: pd.DataFrame, sub: str):
-    return [col for col in df.columns if sub in col]
+    ''' 
+    cols_with_subs(): returns list of dataframe columns with substring
     
-''' series_options: Return dataframe with all categories, options, order, & codes for a set of series IDs
-        dc: Dictionary containing dataframes with categories and codes.
-        option_col_subs: Substrings to look for options column
-        code_col_subs: Substrings to look for code column
-    Dependencies: pandas,cols_with_subs()
-'''
-def series_options(dc: dict, option_col_subs=['text','name'],code_col_subs=['code']):
+    Parameters:
+    df (dataframe): dataframe
+    sub (str): substring
+    
+    Dependencies: pandas
+    '''
+    return [col for col in df.columns if sub in col]
 
+def series_options(dc: dict, option_col_subs=['text','name'],code_col_subs=['code']):
+    ''' 
+    series_options(): return dataframe with all categories, options, order, & codes for a set of series IDs
+    
+    Parameters:
+    dc (dict): Dictionary containing dataframes with categories and codes.
+    option_col_subs (list, optional): Substrings to look for options column
+    code_col_subs (list, optional): Substrings to look for code column
+    
+    Dependencies: pandas & cols_with_subs()
+    '''
     # Get categories as well as their corresponding orders, options, & codes
     orders = [str(k.split('_')[0]) for k in dc.keys()]
     categories = ['_'.join(k.split('_')[1:]) for k in dc.keys()]
@@ -87,14 +96,17 @@ def series_options(dc: dict, option_col_subs=['text','name'],code_col_subs=['cod
     return df
 
 # API methods
-''' api_v1: Returns dataframe containing series_ids data using BLS API V1
-        series_ids: list of series_ids
-        start_year: start year for series data
-        end_year: end year for series data
-    Dependencies: requests,json,pandas
-'''
 def api_v1(series_ids: list, start_year, end_year):
+    ''' 
+    api_v1(): returns dataframe containing series_ids data using BLS API V1
     
+    Parameters:
+    series_ids (list): list of series_ids
+    start_year: start year for series data
+    end_year: end year for series data
+    
+    Dependencies: requests, json, & pandas
+    '''
     # Obtain JSON files represented by series_ids from BLS API V1
     json_data = json.loads(requests.post('https://api.bls.gov/publicAPI/v1/timeseries/data/', 
                            data=json.dumps({"seriesid": series_ids,"startyear": str(start_year), "endyear": str(end_year)}), 
@@ -111,19 +123,22 @@ def api_v1(series_ids: list, start_year, end_year):
         print("No 'series' data found in 'Results'")
         return pd.DataFrame()  # Return an empty DataFrame if no data is found
 
-''' api_v2: Returns dataframe containing series_ids data using BLS API V2
-        series_ids: list of series_ids
-        start_year: start year for series data
-        end_year: end year for series data
-        catalog: true|false
-        calculations: true|false
-        annual_average: true|false
-        aspects: true|false
-        registration_key: API registration key
-    Dependencies: requests,json,pandas
-'''
 def api_v2(series_ids: list,start_year,end_year,catalog=True,calculations=True,annual_average=True,aspects=True,registration_key='b623916dd99845bc8f430711d72c9f38'):
-    
+    ''' 
+    api_v2(): returns dataframe containing series_ids data using BLS API V2
+
+    Parameters:
+    series_ids: list of series_ids
+    start_year: start year for series data
+    end_year: end year for series data
+    catalog: true|false
+    calculations: true|false
+    annual_average: true|false
+    aspects: true|false
+    registration_key: API registration key
+
+    Dependencies: requests, json, & pandas
+    '''
     # Obtain JSON files represented by series_ids from BLS API V2
     json_data = json.loads(requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', 
                            data=json.dumps({"seriesid":series_ids,"startyear":str(start_year),"endyear":str(end_year),
@@ -152,20 +167,25 @@ def api_v2(series_ids: list,start_year,end_year,catalog=True,calculations=True,a
         print("No 'series' data found in 'Results'")
         return pd.DataFrame()  # Return an empty DataFrame if no data is found
 
-''' api_batch: Submits
-        series_ids: list of series_ids
-        start_year: start year for series data (int or str)
-        end_year: end year for series data (int or str)
-        api_v: 1 or 2 (optional)
-        catalog: true|false (optional, api_v='2')
-        calculations: true|false (optional, api_v='2')
-        annual_average: true|false (optional, api_v='2')
-        aspects: true|false (optional, api_v='2')
-        registration_key: API registration key (optional, api_v='2')
-    Dependencies: pandas,api_v1(),api_v2()
-'''
 def api_batch(series_ids: list, start_year, end_year, api_v='2', **kwargs):
-
+    ''' 
+    api_batch(): submits BLS API requests in batches
+    
+    Parameters:
+    series_ids (list): list of series_ids
+    start_year: start year for series data (int or str)
+    end_year: end year for series data (int or str)
+    api_v (str, optional): 1 or 2 (Default: 2)
+    
+    **kwargs:
+    catalog (bool, optional): true|false (api_v='2')
+    calculations (bool, optional): true|false (api_v='2')
+    annual_average (bool, optional): true|false (api_v='2')
+    aspects (bool, optional): true|false (api_v='2')
+    registration_key (bool, optional): API registration key (api_v='2')
+    
+    Dependencies: pandas, api_v1(), & api_v2()
+    '''
     # Set API Version Rules & Notify User
     api_v_rules = {
     "2": {
@@ -234,25 +254,33 @@ def api_batch(series_ids: list, start_year, end_year, api_v='2', **kwargs):
         except Exception: return dc # Returns dictionary of dataframes
 
 # Data Wrangling Methods
-''' convert_str_output: Converts strings to numerical values within BLS output dataframe
-        data: BLS output dataframe
-        dir: save directory (optional)
-        file: save filename (optional)
-    Depedencies: io
-'''
-def convert_str_output(data: pd.DataFrame(), dir: str=None, file: str=None):
+def convert_str_output(data: pd.DataFrame, dir: str=None, file: str=None):
+    ''' 
+    convert_str_output(): converts strings to numerical values within BLS output dataframe
+    
+    Parameters:
+    data (dataframe): BLS output dataframe
+    dir (str, optional): save directory
+    file (str, optional): save filename
+    
+    Depedencies: io & pandas
+    '''
     data['year']=[int(year) for year in data['year']]
     data['value']=[float(value) for value in data['value']]
     data['year_period']=[int(year)+(float(period[1:])-1)/13 for year,period in zip(data['year'],data['period'])]
     if dir is not None and file is not None: io.save(dir,file,data)
     return data
 
-''' scat_series_ids: Plots times series from BLS output dataframe
-        data: BLS output dataframe
-        dir: save directory (optional)
-    Depedencies: plot
-'''
-def scat_series_ids(data: pd.DataFrame(), dir: str=None):
+def scat_series_ids(data: pd.DataFrame, dir: str=None):
+    ''' 
+    scat_series_ids(): plots times series from BLS output dataframe
+    
+    Parameters:
+    data (pandas): BLS output dataframe
+    dir (str, optional): save directory
+    
+    Depedencies: plot & pandas
+    ''' 
     seriesIDs = list(data['seriesID'].value_counts().keys())
     value_max = max(data['value'])
 
