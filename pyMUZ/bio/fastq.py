@@ -391,7 +391,7 @@ def edit_1(df: pd.DataFrame,col='edit'):
     df_1['number']=df_1[col].str[1:-1].astype(int)
     return df_1.reset_index(drop=True)
 
-def dms_tidy(df: pd.DataFrame, cond: str, wt:str, res: str):
+def dms_tidy(df: pd.DataFrame, cond: str, wt:str, res: int):
     ''' 
     dms_tidy(): loads DMS grid data in tidy format split by condition
     
@@ -399,7 +399,7 @@ def dms_tidy(df: pd.DataFrame, cond: str, wt:str, res: str):
     df (dataframe): fastq outcomes dataframe
     cond (str): Condition column name for splicing fastq outcomes
     wt (str): Expected wildtype nucleotide sequence (in frame AA)
-    res (str): First AA number
+    res (int): First AA number
     
     Dependencies: Bio.Seq.Seq, pandas, numpy, tidy, edit_1(), & aa_props
     '''
@@ -422,7 +422,7 @@ def dms_tidy(df: pd.DataFrame, cond: str, wt:str, res: str):
                 vals[m]=[wt_fastq[m].to_list()[0]]*len(list(aa_props.keys()))
             
             # Create all amino acid changes
-            vals['before']=[wt_prot[num-142]]*len(list(aa_props.keys()))
+            vals['before']=[wt_prot[num-res]]*len(list(aa_props.keys()))
             vals['number']=[num]*len(list(aa_props.keys()))
             vals['after']=list(aa_props.keys())
             vals['edit']=[vals['before'][i]+str(num)+vals['after'][i] for i in range(len(vals['after']))]
@@ -432,7 +432,7 @@ def dms_tidy(df: pd.DataFrame, cond: str, wt:str, res: str):
             fractions=[]
             num_mut = df_cond[df_cond['number']==num]
             for a in vals['after']:
-                if a == wt_prot[num-142]: # Wild type
+                if a == wt_prot[num-res]: # Wild type
                     counts.extend(wt_fastq['count'].to_list())
                     fractions.extend(wt_fastq['fraction'].to_list())
                 elif a in num_mut['after'].to_list(): # Amino acid change present
