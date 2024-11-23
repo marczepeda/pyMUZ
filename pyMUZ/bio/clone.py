@@ -5,6 +5,7 @@
 # Import packages
 import pandas as pd
 from Bio.Seq import Seq
+from ..gen import tidy as t
 
 # Supporting Methods
 def ord_form(df:pd.DataFrame,id:str,seq:str,suf:str,pre:str):
@@ -416,4 +417,117 @@ def pe_twist_oligos(df: pd.DataFrame,tG=True, make_extension=True,spacer='Spacer
                            df.iloc[i]['Reverse Barcode'] for i in range(len(df[spacer]))]
     df['twist_oligo_length']=[len(twist) for twist in df['Twist_oligo']]
 
+    return df
+
+# PCR methods
+def pcr_mm(primers: pd.Series, template_uL: int, template='1-2 ng/uL template',
+           Q5_mm_x_stock=5,dNTP_mM_stock=10,fwd_uM_stock=10,rev_uM_stock=10,Q5_U_uL_stock=2,
+           Q5_mm_x_desired=1,dNTP_mM_desired=0.2,fwd_uM_desired=0.5,rev_uM_desired=0.5,Q5_U_uL_desired=0.02,
+           total_uL=25,mm_x=1.1):
+    '''
+    pcr_mm:
+    
+    Parameters:
+    primers (Series): value_counts() for primers
+    template_uL (int): template uL per reaction
+    template (str, optional): template name (Default: '1-2 ng/uL template')
+    Q5_mm_x_stock (int, optional): Q5 reaction master mix stock (Default: 5)
+    dNTP_mM_stock (int, optional): [dNTP] stock in mM (Default: 10)
+    fwd_uM_stock (int, optional): [FWD Primer] stock in mM (Default: 10)
+    rev_uM_stock (int, optional): [REV Primer] stock in mM (Default: 10)
+    Q5_U_uL_stock (int, optional): [Q5 Polymerase] stock in U/uL (Default: 2)
+    Q5_mm_x_desired (int, optional): Q5 reaction master mix desired (Default: 1)
+    dNTP_mM_desired (int, optional): [dNTP] desired in mM (Default: 0.2)
+    fwd_uM_desired (float, optional): [FWD Primer] desired in mM (Default: 0.5)
+    rev_uM_desired (float, optional): [REV Primer] desired in mM (Default: 0.5)
+    Q5_U_uL_desired (float, optional): [Q5 Polymerase] desired in U/uL (Default: 0.02)
+    total_uL (int, optional): total uL per reaction (Default: 25)
+    mm_x (float, optional): master mix multiplier (Default: 1.1)
+
+    Dependencies: pandas
+    '''
+    pcr_mm_dc = dict()
+    for i,(pcr1_fwd,pcr1_rev) in enumerate(primers.keys()):
+        pcr_mm_dc[(pcr1_fwd,pcr1_rev)] = pd.DataFrame({'Component':['Nuclease-free H2O',f'{Q5_mm_x_stock}x Q5 Reaction Buffer','dNTPs',pcr1_fwd,pcr1_rev,template,'Q5 Polymerase','Total'],
+                                                       'Stock':['',Q5_mm_x_stock,dNTP_mM_stock,fwd_uM_stock,rev_uM_stock,'',Q5_U_uL_stock,''],
+                                                       'Desired':['',Q5_mm_x_desired,dNTP_mM_desired,fwd_uM_desired,rev_uM_desired,'',Q5_U_uL_desired,''],
+                                                       'Unit':['','x','mM','uM','uM','','U/uL',''],
+                                                       'uL': [round(total_uL-sum([Q5_mm_x_desired/Q5_mm_x_stock,dNTP_mM_desired/dNTP_mM_stock,fwd_uM_desired/fwd_uM_stock,rev_uM_desired/rev_uM_stock,template_uL/total_uL,Q5_U_uL_desired/Q5_U_uL_stock]*total_uL),2),
+                                                              round(Q5_mm_x_desired/Q5_mm_x_stock*total_uL,2),
+                                                              round(dNTP_mM_desired/dNTP_mM_stock*total_uL,2),
+                                                              round(fwd_uM_desired/fwd_uM_stock*total_uL,2),
+                                                              round(rev_uM_desired/rev_uM_stock*total_uL,2),
+                                                              round(template_uL,2),
+                                                              round(Q5_U_uL_desired/Q5_U_uL_stock*total_uL,2),
+                                                              round(total_uL,2)],
+                                                       'uL MM': [round((total_uL-sum([Q5_mm_x_desired/Q5_mm_x_stock,dNTP_mM_desired/dNTP_mM_stock,fwd_uM_desired/fwd_uM_stock,rev_uM_desired/rev_uM_stock,template_uL/total_uL,Q5_U_uL_desired/Q5_U_uL_stock]*total_uL))*primers.iloc[i]*mm_x,2),
+                                                                 round(Q5_mm_x_desired/Q5_mm_x_stock*total_uL*primers.iloc[i]*mm_x,2),
+                                                                 round(dNTP_mM_desired/dNTP_mM_stock*total_uL*primers.iloc[i]*mm_x,2),
+                                                                 round(fwd_uM_desired/fwd_uM_stock*total_uL*primers.iloc[i]*mm_x,2),
+                                                                 round(rev_uM_desired/rev_uM_stock*total_uL*primers.iloc[i]*mm_x,2),
+                                                                 round(template_uL*primers.iloc[i]*mm_x,2),
+                                                                 round(Q5_U_uL_desired/Q5_U_uL_stock*total_uL*primers.iloc[i]*mm_x,2),
+                                                                 round(total_uL*primers.iloc[i]*mm_x,2)]
+                                                     })
+    return pcr_mm_dc
+
+def pcr_sim(df: pd.DataFrame,template_col: str, fwd_bind_col: str, rev_bind_col: str,
+            fwd_ext_col: str=None, rev_ext_col: str=None, product_col='PCR Product'):
+    '''
+    pcr_sim(): returns dataframe with simulated pcr product 
+    
+    Parameters:
+    df (dataframe): dataframe with template & primers
+    template_col (str): template column name
+    fwd_bind_col (str): fwd primer binding region column name 
+    rev_bind_col (str): rev primer binding region column name 
+    fwd_ext_col (str, optional): fwd primer extension region column name (Default: None)
+    rev_ext_col (str, optional): rev primer extension region column name (Default: None)
+    product_col (str, optional): pcr product column name (Default: 'PCR Product')
+
+    Dependencies: pandas,Bio.Seq,tidy
+    '''
+    pcr_product_ls = []
+
+    if fwd_ext_col is not None and rev_ext_col is not None: # FWD & REV primers have extension regions
+        for (template,fwd_bind,rev_bind,fwd_ext,rev_ext) in t.zip_cols(df=df,cols=[template_col,fwd_bind_col,rev_bind_col,fwd_ext_col,rev_ext_col]):
+            fwd = fwd_ext + fwd_bind
+            rev = rev_ext + rev_bind
+            rc_rev_bind = ''.join(Seq(rev_bind).reverse_complement())
+            rc_rev = ''.join(Seq(rev).reverse_complement())
+            pcr_product_ls.append(fwd+ # fwd primer
+                                  template[template.find(fwd_bind)+len(fwd_bind):template.find(rc_rev_bind)]+ # template between primers
+                                  rc_rev) # reverse complement of reverse primer
+    
+    elif fwd_ext_col is not None: # FWD primers have extension regions
+        for (template,fwd_bind,rev_bind,fwd_ext) in t.zip_cols(df=df,cols=[template_col,fwd_bind_col,rev_bind_col,fwd_ext_col]):
+            fwd = fwd_ext + fwd_bind
+            rev = rev_bind
+            rc_rev_bind = ''.join(Seq(rev_bind).reverse_complement())
+            rc_rev = ''.join(Seq(rev).reverse_complement())
+            pcr_product_ls.append(fwd+ # fwd primer
+                                  template[template.find(fwd_bind)+len(fwd_bind):template.find(rc_rev_bind)]+ # template between primers
+                                  rc_rev) # reverse complement of reverse primer
+    
+    elif rev_ext_col is not None: # REV primers have extension regions
+        for (template,fwd_bind,rev_bind,rev_ext) in t.zip_cols(df=df,cols=[template_col,fwd_bind_col,rev_bind_col,rev_ext_col]):
+            fwd = fwd_bind
+            rev = rev_ext + rev_bind
+            rc_rev_bind = ''.join(Seq(rev_bind).reverse_complement())
+            rc_rev = ''.join(Seq(rev).reverse_complement())
+            pcr_product_ls.append(fwd+ # fwd primer
+                                  template[template.find(fwd_bind)+len(fwd_bind):template.find(rc_rev_bind)]+ # template between primers
+                                  rc_rev) # reverse complement of reverse primer
+    
+    else: # FWD and REV primers do not have extension regions
+        for (template,fwd_bind,rev_bind) in t.zip_cols(df=df,cols=[template_col,fwd_bind_col,rev_bind_col]):
+            fwd = fwd_bind
+            rev = rev_bind
+            rc_rev_bind = ''.join(Seq(rev_bind).reverse_complement())
+            rc_rev = ''.join(Seq(rev).reverse_complement())
+            pcr_product_ls.append(fwd+ # fwd primer
+                                  template[template.find(fwd_bind)+len(fwd_bind):template.find(rc_rev_bind)]+ # template between primers
+                                  rc_rev) # reverse complement of reverse primer
+            
+    df[product_col]=pcr_product_ls
     return df
