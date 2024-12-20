@@ -8,6 +8,7 @@ import numpy as np
 import os
 import re
 from Bio.Seq import Seq
+from Bio.Align import PairwiseAligner
 from ..bio import pegLIT as pegLIT
 from ..gen import io as io
 from ..gen import tidy as t
@@ -124,18 +125,19 @@ def PrimeDesign(file: str,pbs_length_list: list = [],rtt_length_list: list = [],
 
     os.system(cmd) # Execute PrimeDesign Command Line
 
-def PrimeDesignOutput(pt: str, saturation_mutagenesis:str=None, aa_index: int=1, 
-                      scaffold_sequence: str='GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGGCTGAATGCCTGCGAGCATCCCACCCAAGTGGCACCGAGTCGGTGC'):
+def PrimeDesignOutput(pt: str, scaffold_sequence: str, saturation_mutagenesis:str=None, aa_index: int=1):
     ''' 
     PrimeDesignOutput(): splits peg/ngRNAs from PrimeDesign output & finishes annotations
     
     Parameters:
     pt (str): path to primeDesign output
+    scaffold_sequence (str): sgRNA scaffold sequence
+        SpCas9 flip + extend + com-modified (required for VLPs): GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGGCTGAATGCCTGCGAGCATCCCACCCAAGTGGCACCGAGTCGGTGC
+        SpCas9 flip + extend (shorter): GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGC
     saturation_mutagenesis (str, optional): saturation mutagenesis design with prime editing (Options: 'aa', 'base').
     aa_index (int, optional): 1st amino acid in target sequence index (Optional, Default: start codon = 1)
-    scaffold_sequence (str, optional): sgRNA scaffold sequence (Optional, Default: SpCas9)
     
-    Dependencies: io & numpy
+    Dependencies: io, numpy, & pandas
     '''
     if saturation_mutagenesis: # Saturation mutagenesis mode
 
@@ -155,7 +157,7 @@ def PrimeDesignOutput(pt: str, saturation_mutagenesis:str=None, aa_index: int=1,
         pegRNAs = t.reorder_cols(df=pegRNAs,
                                 cols=['pegRNA_number','gRNA_type','Strand','Edit', # Important metadata
                                     'Spacer_sequence','Scaffold_sequence','RTT_sequence','PBS_sequence',  # Sequence information
-                                    'Target_name','Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','ngRNA-to-pegRNA_distance','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide'], # Less important metadata
+                                    'Target_name','Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide'], # Less important metadata
                                 keep=False) 
         
         # Generate ngRNAs
@@ -164,11 +166,11 @@ def PrimeDesignOutput(pt: str, saturation_mutagenesis:str=None, aa_index: int=1,
                         str(target_name.split('_')[-1].split('to')[1]) # AA After
                         for target_name in ngRNAs['Target_name']]
         ngRNAs['Scaffold_sequence']=[scaffold_sequence]*len(ngRNAs)
-        ngRNAs['ngRNA_number']=list(np.arange(len(ngRNAs)))
+        ngRNAs['ngRNA_number']=list(np.arange(1,len(ngRNAs)+1))
         ngRNAs = t.reorder_cols(df=ngRNAs,
                                 cols=['pegRNA_number','ngRNA_number','gRNA_type','Strand','Edit', # Important metadata
                                     'Spacer_sequence','Scaffold_sequence',  # Sequence information
-                                    'Target_name','Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','ngRNA-to-pegRNA_distance','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide'], # Less important metadata
+                                    'Target_name','Target_sequence','Spacer_GC_content','PAM_sequence','Annotation','Nick_index','ngRNA-to-pegRNA_distance'], # Less important metadata
                                 keep=False) 
     
     else: # Not saturation mutagenesis mode
@@ -185,7 +187,7 @@ def PrimeDesignOutput(pt: str, saturation_mutagenesis:str=None, aa_index: int=1,
         pegRNAs = t.reorder_cols(df=pegRNAs,
                                 cols=['Target_name','pegRNA_number','gRNA_type','Strand', # Important metadata
                                     'Spacer_sequence','Scaffold_sequence','RTT_sequence','PBS_sequence',  # Sequence information
-                                    'Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','ngRNA-to-pegRNA_distance','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide'], # Less important metadata
+                                    'Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide'], # Less important metadata
                                 keep=False) 
         
         # Generate ngRNAs
@@ -193,10 +195,47 @@ def PrimeDesignOutput(pt: str, saturation_mutagenesis:str=None, aa_index: int=1,
         ngRNAs = t.reorder_cols(df=ngRNAs,
                                 cols=['Target_name','pegRNA_number','gRNA_type','Strand', # Important metadata
                                     'Spacer_sequence','Scaffold_sequence',  # Sequence information
-                                    'Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','pegRNA-to-edit_distance','Nick_index','ngRNA-to-pegRNA_distance','PBS_length','PBS_GC_content','RTT_length','RTT_GC_content','First_extension_nucleotide'], # Less important metadata
+                                    'Target_sequence','Spacer_GC_content','PAM_sequence','Extension_sequence','Annotation','Nick_index','ngRNA-to-pegRNA_distance'], # Less important metadata
                                 keep=False) 
 
     return pegRNAs,ngRNAs
+
+def MergePrimeDesignOutput(epegRNAs: dict | pd.DataFrame, ngRNAs: dict | pd.DataFrame,ngRNAs_group_max=3,
+                           epegRNA_suffix='_epegRNA', ngRNA_suffix='_ngRNA'):
+    '''
+    MergePrimeDesignOutput(): rejoins epeg/ngRNAs from PrimeDesign output & creates ngRNA_groups
+    
+    Parameters:
+    epegRNAs (dict or dataframe): dictionary containing epegRNA dataframes or epegRNA dataframe
+    ngRNAs (dict or dataframe): dictionary containing ngRNA dataframes or ngRNA dataframe
+    ngRNAs_group_max (int, optional): maximum # of ngRNAs per epegRNA (Default: 3)
+    epegRNA_pre (str, optional): Prefix for epegRNAs columns (Default: epegRNA_)
+    ngRNA_pre (str, optional): Prefix for ngRNAs columns (Default: ngRNA_)
+    
+    Dependencies: tidy & pandas
+    '''
+    # Join dictionary of dataframes if needed
+    if isinstance(epegRNAs,dict): epegRNAs = t.join(epegRNAs).reset_index(drop=True)
+    if isinstance(ngRNAs,dict): ngRNAs = t.join(ngRNAs).drop_duplicates(subset='ngRNA_number').reset_index(drop=True)
+
+    # Limit to ngRNAs that correspond to epegRNAs
+    ngRNAs = ngRNAs[[True if pegRNA_num in set(epegRNAs['pegRNA_number']) else False 
+                     for pegRNA_num in ngRNAs['pegRNA_number']]].reset_index(drop=True)
+
+    # Merge epegRNAs & ngRNAs
+    epeg_ngRNAs = pd.merge(left=epegRNAs,
+                           right=ngRNAs,
+                           on='pegRNA_number',
+                           suffixes=(epegRNA_suffix,ngRNA_suffix)).reset_index(drop=True)
+    
+    ngRNAs_dc = {(pegRNA_num):1 for (pegRNA_num) in list(epeg_ngRNAs['pegRNA_number'].value_counts().keys())}
+    ngRNA_group_ls = []
+    for pegRNA_num in epeg_ngRNAs['pegRNA_number']:
+        ngRNA_group_ls.append(ngRNAs_dc[pegRNA_num]%ngRNAs_group_max+1)
+        ngRNAs_dc[pegRNA_num]+=1
+    epeg_ngRNAs['ngRNA_group']=ngRNA_group_ls
+    
+    return epeg_ngRNAs
 
 # pegRNA Methods
 def epegRNA_linkers(pegRNAs: pd.DataFrame, epegRNA_motif_sequence: str='CGCGGTTCTATCTAGTTACGCGTTAAACCAACTAGAA',
@@ -252,7 +291,7 @@ def shared_sequences(pegRNAs: pd.DataFrame, hist_plot:bool=True, hist_dir: str=N
     Dependencies: pandas & plot
     '''
     # Reduce PE library to the set shared of spacers and PBS motifs
-    shared = {(pegRNAs.iloc[i]['Spacer_sequence'],pegRNAs.iloc[i]['PBS_sequence']) for i in range(len(pegRNAs))}
+    shared = sorted({(pegRNAs.iloc[i]['Spacer_sequence'],pegRNAs.iloc[i]['PBS_sequence']) for i in range(len(pegRNAs))})
     shared_pegRNAs_lib = pd.DataFrame(columns=['pegRNA_numbers','Strand','Edits','Spacer_sequence','PBS_sequence'])
     for (spacer,pbs) in shared:
         shared_pegRNAs = pegRNAs[(pegRNAs['Spacer_sequence']==spacer)&(pegRNAs['PBS_sequence']==pbs)]
@@ -290,7 +329,7 @@ def shared_sequences(pegRNAs: pd.DataFrame, hist_plot:bool=True, hist_dir: str=N
             shared_hist = pd.concat([shared_hist,pd.DataFrame({'Group_Spacer_PBS': [f'{str(i)}_{shared_pegRNAs_lib.iloc[i]["Spacer_sequence"]}_{shared_pegRNAs_lib.iloc[i]["PBS_sequence"]}']*len(aa_numbers),
                                                                'AA_number': aa_numbers})]).reset_index(drop=True)
         p.dist(typ='hist',df=shared_hist,x='AA_number',cols='Group_Spacer_PBS',x_axis='AA number',title='Shared Spacers & PBS Sequences in the PE Library',
-               x_axis_dims=(min(shared_hist['AA_number']),max(shared_hist['AA_number'])),figsize=(10,2),
+               x_axis_dims=(min(shared_hist['AA_number']),max(shared_hist['AA_number'])),figsize=(10,2),bins=max(shared_hist['AA_number'])-min(shared_hist['AA_number'])+1,
                legend_loc='upper center',legend_bbox_to_anchor=(0.5, -.3),dir=hist_dir,file=hist_file,legend_ncol=2,**kwargs)
 
     return shared_pegRNAs_lib
@@ -1044,7 +1083,7 @@ def print_shared_sequences(dc: dict):
 
     text = f""
     for key in keys_a: 
-        text += f"\t{key}_spacer\t{key}_PBS"
+        text += f"\t{key}_spacer\t\t{key}_PBS\t\t"
 
     for v in range(len(dc[keys_a[0]])):
         text += f"\n{v}:\t"
@@ -1065,10 +1104,74 @@ def print_shared_sequences_mutant(dc: dict):
 
     text = f""
     for key in keys_a: 
-        text += f"\t{key}_spacer\t{key}_PBS\t{key}_mutant"
+        text += f"\t{key}_spacer\t\t{key}_PBS\t\t{key}_mutant"
 
     for v in range(len(dc[keys_a[0]])):
         text += f"\n{v}:\t"
         for key in keys_a:
-            text += f"{dc[key].iloc[v]['Spacer_sequence']}\t{dc[key].iloc[v]['PBS_sequence']}\t\t{dc[key].iloc[v]['Priority_mut']}\t\t\t"
+            text += f"{dc[key].iloc[v]['Spacer_sequence']}\t{dc[key].iloc[v]['PBS_sequence']}\t{dc[key].iloc[v]['Priority_mut']}\t\t"
     print(text)
+
+# Comparing pegRNAs
+def group_pe(df: pd.DataFrame, other_cols: list, epegRNA_id_col='epegRNA',ngRNA_id_col='ngRNA',
+             epegRNA_spacer_col='Spacer_sequence_epegRNA',epegRNA_RTT_col='RTT_sequence',epegRNA_PBS_col='PBS_sequence',
+             match_score=1, mismatch_score=-1):
+    '''
+    group_pe(): returns a dataframe containing groups of (epegRNA,ngRNA) pairs that share spacers and have similar PBS and performs pairwise alignment for RTT
+    
+    Parameters:
+    df (dataframe): dataframe
+    other_cols (list): names of other column that will be retained
+    epegRNA_id_col (str, optional): epegRNA id column name (Default: epegRNA)
+    ngRNA_id_col (str, optional): ngRNA id column name (Default: ngRNA)
+    epegRNA_spacer_col (str, optional): epegRNA spacer column name (Default: Spacer_sequence_epegRNA)
+    epegRNA_RTT_col (str, optional): epegRNA reverse transcripase template column name (Default: RTT_sequence_epegRNA)
+    epegRNA_PBS_col (str, optional): epegRNA primer binding site column name (Default: PBS_sequence_epegRNA
+    match_score (int, optional): match score for pairwise alignment (Default: 1)
+    mismatch_score (int, optional): mismatch score for pairwise alignment (Default: -1)
+    
+    Dependencies: pandas,Bio
+    '''
+    # Intialize the aligner
+    aligner = PairwiseAligner()
+    aligner.mode = 'global'  # Use 'local' for local alignment
+    aligner.match_score = match_score  # Score for a match
+    aligner.mismatch_score = mismatch_score/2  # Penalty for a mismatch; applied to both strands
+    aligner.open_gap_score = mismatch_score  # Penalty for opening a gap; applied to both strands
+    aligner.extend_gap_score = mismatch_score  # Penalty for extending a gap; applied to both strands
+
+    # Isolate desired columns
+    other_cols.extend([epegRNA_id_col,ngRNA_id_col,epegRNA_spacer_col,epegRNA_RTT_col,epegRNA_PBS_col])
+    df = df[other_cols]
+
+    df_pairs = pd.DataFrame() # (epegRNA,ngRNA) pairs dataframe
+    for epegRNA_id in list(df[epegRNA_id_col].value_counts().keys()): # Iterate through epegRNA ids
+        
+        # Split dataframe to isolate 1 epegRNA from others with the same spacer
+        df_epegRNA = df[df[epegRNA_id_col]==epegRNA_id].reset_index(drop=True)
+        df_others = df[(df[epegRNA_id_col]!=epegRNA_id)&(df[epegRNA_spacer_col]==df_epegRNA.iloc[0][epegRNA_spacer_col])].reset_index(drop=True)
+
+        # Iterate through (epegRNA,ngRNA) pairs and isolate...
+        for i,(ngRNA,epegRNA_RTT,epegRNA_PBS) in enumerate(t.zip_cols(df=df_epegRNA,cols=[ngRNA_id_col,epegRNA_RTT_col,epegRNA_PBS_col])):
+            df_others = df_others[df_others[ngRNA_id_col]==ngRNA].reset_index(drop=True) # shared ngRNAs
+            df_others = df_others[(df_others[epegRNA_PBS_col].str.contains(epegRNA_PBS))|(epegRNA_PBS in df_others[epegRNA_PBS_col])].reset_index(drop=True) # similar PBS
+            
+            if df_others.empty==False: # Only retain successful pairs
+                df_others['PBS_lengths'] = [f'({len(epegRNA_PBS)},{len(other_epegRNA_PBS)})' for other_epegRNA_PBS in df_others[epegRNA_PBS_col]] # Get PBS lengths
+                
+                # Quantify mismatches in RTT alignments
+                RTT_alignments = []
+                RTT_alignments_mismatches = []
+                for other_epegRNA_RTT in df_others[epegRNA_RTT_col]:
+                    RTT_alignment = aligner.align(epegRNA_RTT,other_epegRNA_RTT)[0]
+                    RTT_alignments.append(RTT_alignment)
+                    RTT_alignments_mismatches.append(int(len(epegRNA_RTT)-RTT_alignment.score))
+                df_others['RTT_alignment'] = RTT_alignments
+                df_others['RTT_alignments_mismatches'] = RTT_alignments_mismatches
+                
+                series_df_epegRNA = pd.concat([pd.DataFrame([df_epegRNA.iloc[i]])]*(len(df_others))).reset_index(drop=True)
+
+                df_pair = pd.concat([df_others,series_df_epegRNA.rename(columns=lambda col: f"{col}_compare")],axis=1) # Append compared (epegRNA,ngRNA)
+                df_pairs = pd.concat([df_pairs,df_pair]).reset_index(drop=True) # Save (epegRNA,ngRNA) pairs to output dataframe
+    
+    return df_pairs
