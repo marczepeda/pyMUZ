@@ -62,6 +62,7 @@
     conda install anaconda::pillow
     conda install anaconda::git
     pip install dna-features-viewer
+    conda install conda-forge::selenium
     ```
 6. Install pyMUZ: write the following in a command line terminal...
     ```shell
