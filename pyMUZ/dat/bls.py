@@ -1,6 +1,24 @@
-### bls.py ###
-# Author: Marc Zepeda
-# Date: 2024-08-20
+'''
+Module: bls.py
+Author: Marc Zepeda
+Created: 2024-08-20
+Description: Bureau of Labor Statistics
+
+Usage:
+[Series ID methods]
+- series_ids(): returns dataframe containing series ids and corresponding metadata
+- cols_with_subs(): returns list of dataframe columns with substring
+- series_options(): return dataframe with all categories, options, order, & codes for a set of series IDs
+
+[API methods]
+- api_v1(): returns dataframe containing series_ids data using BLS API V1
+- api_v2(): returns dataframe containing series_ids data using BLS API V2
+- api_batch(): submits BLS API requests in batches
+
+[Data Wrangling Methods]
+- convert_str_output(): converts strings to numerical values within BLS output dataframe
+- scat_series_ids(): plots times series from BLS output dataframe
+'''
 
 # Import packages
 import pandas as pd
@@ -124,7 +142,7 @@ def api_v1(series_ids: list, start_year, end_year):
         return pd.DataFrame()  # Return an empty DataFrame if no data is found
 
 def api_v2(series_ids: list,start_year,end_year,catalog=True,calculations=True,annual_average=True,aspects=True,registration_key='b623916dd99845bc8f430711d72c9f38'):
-    ''' 
+    '''
     api_v2(): returns dataframe containing series_ids data using BLS API V2
 
     Parameters:

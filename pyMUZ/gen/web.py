@@ -1,6 +1,18 @@
-### web.py ###
-# Author: Marc Zepeda
-# Date: 2024-08-17
+''' 
+Module: web.py
+Author: Marc Zepeda
+Created: 2024-08-17
+Description: Website
+
+Usage:
+[HTML Methods]
+- get_html(): obtains html file from the internet
+- search(): returns & print blocks of text that contains substring
+
+[Selenium Methods]
+- handle_dropdowns(): recursively handle the next dropdown in the list
+- get_dropdown_options(): returns dictionary of dropdown menu options that depend on each other
+'''
 
 # Import packages
 import requests
@@ -103,7 +115,7 @@ def handle_dropdowns(dc: dict, prev_option: str, driver, dropdown_ids, current_i
 
 def get_dropdown_options(url: str, dropdown_ids: list, dir=None, file=None, dc_checkpoint={},dc_checkpoint_i=0):
     ''' 
-    get_dropdown_options(): returns dictionary of dropdown menu options that depend on each other.
+    get_dropdown_options(): returns dictionary of dropdown menu options that depend on each other
     
     Parameters:
     url (str): website url
