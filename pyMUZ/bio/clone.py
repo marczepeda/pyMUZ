@@ -32,6 +32,7 @@ import pandas as pd
 import numpy as np
 import random
 from Bio.Seq import Seq
+from ..gen import io
 from ..gen import tidy as t
 
 # Individual GG cloning
@@ -94,12 +95,13 @@ def tb(df:pd.DataFrame,id:str,seq:str,t5:str,t3:str,b5:str,b3:str,tG:bool,pre:st
     
     return df
 
-def sgRNAs(df:pd.DataFrame,id:str,spacer='Spacer_sequence',t5='CACC',t3='',b5='AAAC',b3='',tG=True,order=True):
+def sgRNAs(df:pd.DataFrame | str,id:str,spacer='Spacer_sequence',t5='CACC',t3='',b5='AAAC',b3='',tG=True,order=True,
+           dir:str=None, file:str=None):
     ''' 
     sgRNAs(): design GG cloning oligonucleotides for cutting and base editing sgRNAs
     
     Parameters:
-    df (dataframe): Dataframe with sequence information for epegRNAs
+    df (dataframe | str): Dataframe with sequence information for sgRNAs (or file path)
     id (str): id column name
     spacer (str): spacer column name (Default: Spacer_sequence)
     t5 (str): top oligonucleotide 5' overhang
@@ -108,22 +110,33 @@ def sgRNAs(df:pd.DataFrame,id:str,spacer='Spacer_sequence',t5='CACC',t3='',b5='A
     b3 (str): bottom oligonucleotide 3' overhang (revcom)
     tG (bool): add 5' G to spacer if needed (Default: True)
     order (bool): order format
+    dir (str, optional): save directory
+    file (str, optional): save file
     
-    Dependencies: pandas, top_bot(), & ord_form()
+    Dependencies: pandas, io, top_bot(), & ord_form()
     '''
-    df=tb(df=df,id=id,seq=spacer,t5=t5,t3=t3,b5=b5,b3=b3,tG=tG,pre='o') # Make top and bottom oligos for spacer inserts
-    if order==True: return pd.concat([ord_form(df=df,id=id,seq=spacer,suf='_t',pre='o'), # Sigma order format
-                                      ord_form(df=df,id=id,seq=spacer,suf='_b',pre='o')]).reset_index(drop=True)
-    else: return df # Original dataframe with top and bottom oligos
+    if type(df)==str: # Get sgRNAs dataframe from file path if needed
+        df = io.get(pt=df)
 
-def epegRNAs(df: pd.DataFrame,id: str,tG=True, order=True,make_extension=True,
+    df=tb(df=df,id=id,seq=spacer,t5=t5,t3=t3,b5=b5,b3=b3,tG=tG,pre='o') # Make top and bottom oligos for spacer inserts
+    if order==True: # Sigma order format (or original dataframe with top and bottom oligos)
+        df = pd.concat([ord_form(df=df,id=id,seq=spacer,suf='_t',pre='o'), 
+                        ord_form(df=df,id=id,seq=spacer,suf='_b',pre='o')]).reset_index(drop=True)
+    
+    # Save & return dataframe
+    if dir is not None and file is not None:
+        io.save(dir=dir,file=file,obj=df)  
+    return df
+
+def epegRNAs(df: pd.DataFrame | str,id: str,tG=True, order=True,make_extension=True,
              spacer='Spacer_sequence',spacer_t5='CACC',spacer_t3='GTTTAAGAGC',spacer_b5='',spacer_b3='',
-             extension='Extension_sequence',RTT='RTT_sequence',PBS='PBS_sequence',linker='Linker_sequence',extension_t5='',extension_t3='',extension_b5='CGCG',extension_b3='GCACCGACTC'):
+             extension='Extension_sequence',RTT='RTT_sequence',PBS='PBS_sequence',linker='Linker_sequence',extension_t5='',extension_t3='',extension_b5='CGCG',extension_b3='GCACCGACTC',
+             dir:str=None, file:str=None):
     ''' 
     epegRNAs(): design GG cloning oligonucleotides for prime editing epegRNAs
     
     Parameters:
-    df (dataframe): Dataframe with sequence information for epegRNAs
+    df (dataframe | str): Dataframe with sequence information for epegRNAs (or file path)
     id (str): id column name
     tG (bool, optional): add 5' G to spacer if needed (Default: True)
     order (bool, optional): order format (Default: True)
@@ -141,30 +154,41 @@ def epegRNAs(df: pd.DataFrame,id: str,tG=True, order=True,make_extension=True,
     RTT (str, optional): epegRNA reverse transcripase template column name (Default: RTT_sequence)
     PBS (str, optional): epegRNA primer binding site column name (Default: PBS_sequence)
     linker (str, optional): epegRNA linker column name(Default: Linker_sequence)
+    dir (str, optional): save directory
+    file (str, optional): save file
     
     Assumptions:
     1. epegRNA scaffold: GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGGCTGAATGCCTGCGAGCATCCCACCCAAGTGGCACCGAGTCGGTGC
     2. epegRNA motif: tevoPreQ1 (CGCGGTTCTATCTAGTTACGCGTTAAACCAACTAGAA)
     
     Dependencies: pandas, top_bot(), & ord_form()
-    ''' 
+    '''
+    if type(df)==str: # Get epegRNAs dataframe from file path if needed
+        df = io.get(pt=df)
+    
     if make_extension==True: df[extension] = df[RTT]+df[PBS]+df[linker] # Make extension by concatenating RTT, PBS, and linker
     else: print(f'Warning: Did not make extension sequence!\nMake sure "{extension}" column includes RTT+PBS+linker for epegRNAs.')
     df=tb(df=df,id=id,seq=spacer,t5=spacer_t5,t3=spacer_t3,b5=spacer_b5,b3=spacer_b3,tG=tG,pre='ps_') # Make top and bottom oligos for spacer inserts
     df=tb(df=df,id=id,seq=extension,t5=extension_t5,t3=extension_t3,b5=extension_b5,b3=extension_b3,tG=False,pre='pe_') # Make top and bottom oligos for extension inserts
-    if order==True: return pd.concat([ord_form(df=df,id=id,seq=spacer,suf='_t',pre='ps_'), # Sigma order format
-                                      ord_form(df=df,id=id,seq=spacer,suf='_b',pre='ps_'),
-                                      ord_form(df=df,id=id,seq=extension,suf='_t',pre='pe_'),
-                                      ord_form(df=df,id=id,seq=extension,suf='_b',pre='pe_')]).reset_index(drop=True)
-    else: return df # Original dataframe with top and bottom oligos
+    if order==True: # Sigma order format (or original dataframe with top and bottom oligos)
+        df = pd.concat([ord_form(df=df,id=id,seq=spacer,suf='_t',pre='ps_'),
+                        ord_form(df=df,id=id,seq=spacer,suf='_b',pre='ps_'),
+                        ord_form(df=df,id=id,seq=extension,suf='_t',pre='pe_'),
+                        ord_form(df=df,id=id,seq=extension,suf='_b',pre='pe_')]).reset_index(drop=True)
 
-def ngRNAs(df: pd.DataFrame,id: str,tG=True, order=True,
-           spacer='Spacer_sequence',ngRNA_sp_t5='CACC',ngRNA_sp_t3='GTTTAAGAGC',ngRNA_sp_b5='',ngRNA_sp_b3=''):
+    # Save & return dataframe
+    if dir is not None and file is not None:
+        io.save(dir=dir,file=file,obj=df)  
+    return df
+
+def ngRNAs(df: pd.DataFrame | str,id: str,tG=True, order=True,
+           spacer='Spacer_sequence',ngRNA_sp_t5='CACC',ngRNA_sp_t3='GTTTAAGAGC',ngRNA_sp_b5='',ngRNA_sp_b3='',
+           dir:str=None, file:str=None):
     ''' 
     ngRNAs(): design GG cloning oligonucleotides for prime editing ngRNAs
     
     Parameters:
-    df (dataframe): Dataframe with spacers
+    df (dataframe | str): Dataframe with spacers (or file path)
     id (str): id column
     tG (bool, optional): add 5' G to spacer if needed (Default: True)
     order (bool, optional): order format (Default: True)
@@ -173,17 +197,26 @@ def ngRNAs(df: pd.DataFrame,id: str,tG=True, order=True,
     ngRNA_sp_t3 (str, optional): top oligonucleotide 3' overhang
     ngRNA_sp_b5 (str, optional): bottom oligonucleotide 5' overhang
     ngRNA_sp_b3 (str, optional): bottom oligonucleotide 3' overhang}
+    dir (str, optional): save directory
+    file (str, optional): save file
     
     Assumptions:
     1. ngRNA scaffold: GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGGCTGAATGCCTGCGAGCATCCCACCCAAGTGGCACCGAGTCGGTGC
     
     Dependencies: pandas, top_bot(), & ord_form()
-'''
-    df=tb(df=df,id=id,seq=spacer,t5=ngRNA_sp_t5,t3=ngRNA_sp_t3,b5=ngRNA_sp_b5,b3=ngRNA_sp_b3,tG=tG,pre='ns_') # Make top and bottom oligos for spacer inserts
-    if order==True: return pd.concat([ord_form(df=df,id=id,seq=spacer,suf='_t',pre='ns_'), # Sigma order format
-                                      ord_form(df=df,id=id,seq=spacer,suf='_b',pre='ns_')]).reset_index(drop=True)
+    '''
+    if type(df)==str: # Get ngRNAs dataframe from file path if needed
+        df = io.get(pt=df)
     
-    else: return df # Original dataframe with top and bottom oligos
+    df=tb(df=df,id=id,seq=spacer,t5=ngRNA_sp_t5,t3=ngRNA_sp_t3,b5=ngRNA_sp_b5,b3=ngRNA_sp_b3,tG=tG,pre='ns_') # Make top and bottom oligos for spacer inserts
+    if order==True: # Sigma order format (or original dataframe with top and bottom oligos)
+        df = pd.concat([ord_form(df=df,id=id,seq=spacer,suf='_t',pre='ns_'),
+                        ord_form(df=df,id=id,seq=spacer,suf='_b',pre='ns_')]).reset_index(drop=True)
+
+    # Save & return dataframe
+    if dir is not None and file is not None:
+        io.save(dir=dir,file=file,obj=df)  
+    return df
 
 # Library GG cloning
 ''' pe_pcr1: Dataframe of PE library PCR1 primers
@@ -442,19 +475,20 @@ def shuffle(ls: list):
     random.shuffle(ls2)
     return ls2
 
-def pe_twist_oligos(df: pd.DataFrame,id_pre:str,tG=True, make_extension=True,UMI_length:int=8,UMI_GC_fract:tuple=(0.4,0.6),
+def pe_twist_oligos(df: pd.DataFrame | str,id_pre:str,tG=True, make_extension=True,UMI_length:int=8,UMI_GC_fract:tuple=(0.4,0.6),
                     fwd_barcode_t5='Forward Barcode',rev_barcode_t3='Reverse Barcode',
                     homology_arm_t5='Homology Arm 5',homology_arm_t3='Homology Arm 3',
                     ngRNA_hU6_gg_insert='GTTTAGAGACGATCGACGTCTCACACC',epegRNA_gg_insert='GTTTAAGAGCAGGTGCTAGACCTGCGTCGGTGC',
                     ngRNA_spacer='Spacer_sequence_ngRNA',epegRNA_spacer='Spacer_sequence_epegRNA',
                     epegRNA_extension='Extension_sequence',epegRNA_RTT='RTT_sequence',
                     epegRNA_PBS='PBS_sequence',epegRNA_linker='Linker_sequence',
-                    epegRNA_pbs_length='PBS_length',ngRNA_group='ngRNA_group'):
+                    epegRNA_pbs_length='PBS_length',ngRNA_group='ngRNA_group',
+                    dir:str=None, file:str=None):
     ''' 
     pe_twist_oligos(): makes twist oligonucleotides for prime editing
     
     Parameters:
-    df (dataframe): Dataframe with sequence information for epegRNAs & corresponding ngRNAs
+    df (dataframe | str): Dataframe with sequence information for epegRNAs & corresponding ngRNAs (or file path)
     id_pre (str): Prefix for ID column
     tG (bool, optional): add 5' G to spacer if needed (Default: True)
     UMI_length (int, optional): unique molecular identifier length (Default: 8; 4^8=65,536 UMIs before GC content filtering; adds 16 nt total)
@@ -472,13 +506,18 @@ def pe_twist_oligos(df: pd.DataFrame,id_pre:str,tG=True, make_extension=True,UMI
     epegRNA_RTT (str, optional): epegRNA reverse transcripase template column name (Default: RTT_sequence)
     epegRNA_PBS (str, optional): epegRNA primer binding site column name (Default: PBS_sequence)
     epegRNA_linker (str, optional): epegRNA linker column name (Default: Linker_sequence)
-    
+    dir (str, optional): save directory
+    file (str, optional): save file
+
     Assumptions:
     1. Oligo Template: FWD Barcode - BsaI - mU6 - ngRNA_spacer - ngRNA_scaffold_5nt - Esp3I(R) - random_5nt - Esp3I(F) - hU6 - epegRNA_spacer - epegRNA_scaffold_8nt - BspMI (R) - random_5nt - BspMI - epegRNA_scaffold_8nt - epegRNA_extension - tevopreQ1_motif_5nt - BsaI - REV Barcode
     2. epegRNA motif: tevoPreQ1 (CGCGGTTCTATCTAGTTACGCGTTAAACCAACTAGAA)
     
     Dependencies: pandas,random,generate_sequences(),filter_GC(),shuffle(),pe_pcr1
     '''
+    if type(df)==str: # Get epeg/ngRNAs dataframe from file path if needed
+        df = io.get(pt=df)
+
     # Make extension by concatenating RTT, PBS, and linker
     if make_extension==True: df[epegRNA_extension] = df[epegRNA_RTT]+df[epegRNA_PBS]+df[epegRNA_linker]
     else: print(f'Warning: Did not make extension sequence!\nMake sure "{epegRNA_extension}" column includes RTT+PBS+linker for epegRNAs.')
@@ -586,6 +625,9 @@ def pe_twist_oligos(df: pd.DataFrame,id_pre:str,tG=True, make_extension=True,UMI
         df[enzyme] = enzyme_sites
         print(f"{enzyme} does not have 2 reconition sites for {[id for (id,enzyme_site) in t.zip_cols(df=df,cols=['ID',enzyme]) if enzyme_site!=2]}")
     
+    # Save & return dataframe
+    if dir is not None and file is not None:
+        io.save(dir=dir,file=file,obj=df) 
     return df
 
 # Master Mix
@@ -637,26 +679,32 @@ def pcr_mm(primers: pd.Series, template_uL: int, template='1-2 ng/uL template',
                                                                  round(template_uL*primers.iloc[i]*mm_x,2),
                                                                  round(Q5_U_uL_desired/Q5_U_uL_stock*total_uL*primers.iloc[i]*mm_x,2),
                                                                  round(total_uL*primers.iloc[i]*mm_x,2)]
-                                                     })
+                                                     },index=pd.Index(list(np.arange(1,9)), name=f"{pcr1_fwd}_{pcr1_rev}"))
     return pcr_mm_dc
 
 # Simulation
-def pcr_sim(df: pd.DataFrame,template_col: str, fwd_bind_col: str, rev_bind_col: str,
-            fwd_ext_col: str=None, rev_ext_col: str=None, product_col='PCR Product'):
+def pcr_sim(df: pd.DataFrame | str,template_col: str, fwd_bind_col: str, rev_bind_col: str,
+            fwd_ext_col: str=None, rev_ext_col: str=None, product_col='PCR Product',
+            dir:str=None, file:str=None):
     '''
     pcr_sim(): returns dataframe with simulated pcr product 
     
     Parameters:
-    df (dataframe): dataframe with template & primers
+    df (dataframe | str): dataframe with template & primers (or file path)
     template_col (str): template column name
     fwd_bind_col (str): fwd primer binding region column name 
     rev_bind_col (str): rev primer binding region column name 
     fwd_ext_col (str, optional): fwd primer extension region column name (Default: None)
     rev_ext_col (str, optional): rev primer extension region column name (Default: None)
     product_col (str, optional): pcr product column name (Default: 'PCR Product')
+    dir (str, optional): save directory
+    file (str, optional): save file
 
     Dependencies: pandas,Bio.Seq,tidy
     '''
+    if type(df)==str: # Get template & primers dataframe from file path if needed
+        df = io.get(pt=df)
+
     pcr_product_ls = []
 
     if fwd_ext_col is not None and rev_ext_col is not None: # FWD & REV primers have extension regions
@@ -700,4 +748,8 @@ def pcr_sim(df: pd.DataFrame,template_col: str, fwd_bind_col: str, rev_bind_col:
                                   rc_rev) # reverse complement of reverse primer
             
     df[product_col]=pcr_product_ls
+
+    # Save & return dataframe
+    if dir is not None and file is not None:
+        io.save(dir=dir,file=file,obj=df) 
     return df

@@ -7,6 +7,7 @@ from urllib import request
 from time import sleep
 import json
 import pandas as pd
+from ..pyMUZ.gen import io
 
 # General packages
 import os
@@ -15,28 +16,55 @@ from collections import OrderedDict, Counter, defaultdict
 ### General API ###
 # Supporting Methods
 
-''' get_payload: Returns Python dictionary from the JSON file encoded in the url.
-        - url_prefix: prefix for database
-        - url_suffix: suffix for specific JSON file
-'''
-def get_payload(url: str()):
-    req = request.Request(url)
-    response = request.urlopen(req)
-    encoded_response = response.read()
-    decoded_response = encoded_response.decode()
-    payload = json.loads(decoded_response)
-    return payload
-
-''' get_payload_local: Returns Python dictionary from the JSON file stored locally.
-        - file_path: location for specific JSON file
-'''
-def get_payload_local(file_path: str()):
+def get_json(url: str=None, pt: str=None, file:str=None, dir:str=None):
+    ''' 
+    get_json(): obtains json file from the internet
     
-    with open(file_path, 'r') as file:
-        # Load the JSON data from the file
-        payload = json.load(file)
-    return payload
+    Parameters:
+    url (str, option 1): website url for json file
+    pt (str, option 2): path for json file
+    file (str, optional): saved file name
+    dir (str, optional): saved file directory
+    
+    Dependencies: os & requests
+    '''
+    if url is not None: # url specified
+        try: 
+            # Send a GET request to the URL
+            req = request.Request(url)
+            response = request.urlopen(req)
+            encoded_response = response.read()
+            decoded_response = encoded_response.decode()
+            payload = json.loads(decoded_response)
 
+            # Save html file if file and dir are specified
+            if file is not None and dir is not None:
+                io.save(dir=dir,file=file,obj=pd.DataFrame({'JSON': [payload]}))
+                print(f"JSON content successfully saved to {file}")
+
+            return payload
+        
+        except Exception as e: print(f"{url} error:\n{e}")
+    
+    elif pt is not None: # pt specified
+        try: 
+            # Load the JSON data from the file
+            with open(pt, 'r') as f: 
+                payload = json.load(f)
+            
+            # Save html file if file and dir are specified
+            if file is not None and dir is not None:
+                io.save(dir=dir,file=file,obj=pd.DataFrame({'JSON': [payload]}))
+                print(f"JSON content successfully saved to {file}")
+
+            return payload
+
+        except Exception as e: print(f"{pt} error:\n{e}")
+    
+    else: KeyError('Specify url or pt')
+
+
+## work here...
 ''' get_results: Returns Pandas dataframe containing "get" values from the "results" section of the JSON file.
         - payload: Python dictionary containing data from JSON file
         - get: list of data
@@ -65,7 +93,7 @@ def get_results(payload: dict(), get: list()):
         default_keys: list of missing keys
         default_values: list of default values
 '''
-def set_default_values(d: dict(), default_keys: list(), default_values: list()):
+def set_default_values(d: dict, default_keys: list, default_values: list):
     defaults = dict(zip(default_keys,default_values))
     return [dict(defaults, **item) for item in d]
 
@@ -75,7 +103,7 @@ def set_default_values(d: dict(), default_keys: list(), default_values: list()):
         d: List of Python dictionaries from JSON file
         record_keys: list of record keys
 '''
-def get_json_normalize_record(d: list(), record_keys: list()):
+def get_json_normalize_record(d: list, record_keys: list):
     
     # Fill in missing keys with default values
     d_cleaned = set_default_values(d=d, default_keys=record_keys, default_values=[[] for _ in record_keys])
@@ -107,7 +135,7 @@ def get_json_normalize_record(d: list(), record_keys: list()):
         ls: list containing Python dictionary structure
         k: string that retains previous keys within the Python dictionary structure
 '''
-def get_structure(obj, s=set(), k=''):
+def get_structure(obj, s=set, k=''):
 
     # Checks for instance of dictionary within the obj, appends keys to a set, & recursive search with values
     if isinstance(obj, dict):
@@ -153,7 +181,7 @@ def remove_substring_elements(input_set):
 ''' get_key_sets: Returns sets containing keys with lists and all keys from a list describing Python dictionary's structure
         structure_ls: list containing endpoints for Python dictionary with lists structure minus endpoints containing "exclude" values
 '''
-def get_key_sets(structure_ls: str()):
+def get_key_sets(structure_ls: str):
 
     # Create sets containing Python dictionary elements that are keys with lists and all keys
     k_ls_set = set()
@@ -180,7 +208,7 @@ def get_key_sets(structure_ls: str()):
 ''' get_structure_dict: Returns a python dictionary representing the original Python dictionary's structure
         structure_ls: list containing endpoints for Python dictionary with lists structure minus endpoints containing "exclude" values
 '''
-def get_structure_dict(structure_ls: str()): 
+def get_structure_dict(structure_ls: str): 
     
     # Obtain list of dictionaries based on the Python dictionary's structure
     structure_dict = dict()
@@ -212,7 +240,7 @@ def get_structure_dict(structure_ls: str()):
         exclude: list of strings
     Dependencies: get_structure, remove_elements_containing_substring, remove_substring_elements, get_key_sets, get_structure_dict
 '''
-def extract_data(payload: dict(), exclude: list()): # Not done. Will work on tomorrow.
+def extract_data(payload: dict, exclude: list): # Not done. Will work on tomorrow.
     
     # Get list containing endpoints for Python dictionary with lists structure minus endpoints containing "exclude" values
     structure_set = get_structure(payload)
@@ -240,7 +268,7 @@ def extract_data(payload: dict(), exclude: list()): # Not done. Will work on tom
         - url_suffix: suffix for specific JSON file
         - key: NCI SEER API key
 '''
-def get_NCI_SEER_API_payload(url_prefix: str(), url_suffix: str(), key: str()):
+def get_NCI_SEER_API_payload(url_prefix: str, url_suffix: str, key: str):
     url = os.path.join(url_prefix,url_suffix)
     req = request.Request(url)
     req.add_header("X-SEERAPI-Key", key)
@@ -256,7 +284,7 @@ def get_NCI_SEER_API_payload(url_prefix: str(), url_suffix: str(), key: str()):
         - offset_loc: list index for offset based on sep 
         - sep: link seperator value
 '''
-def get_NCI_SEER_API_link(url_suffix: str(), offset: int(), offset_loc=3, sep="&"):
+def get_NCI_SEER_API_link(url_suffix: str, offset: int, offset_loc=3, sep="&"):
     url_suffix_ls = url_suffix.split(sep) # Split url into list
     url_suffix_ls[offset_loc] = url_suffix_ls[offset_loc][0:url_suffix_ls[offset_loc].find('=')+1] + str(offset) # Modify offset
     return sep.join(url_suffix_ls) # Rejoin new url from updated list
@@ -269,7 +297,7 @@ def get_NCI_SEER_API_link(url_suffix: str(), offset: int(), offset_loc=3, sep="&
         - count_loc: list index for count based on sep 
         - sep: link seperator value
 '''
-def get_NCI_SEER_API_link_last(url_suffix: str(), total: int(), offset: int(), offset_loc=3, count_loc=2, sep="&"):
+def get_NCI_SEER_API_link_last(url_suffix: str, total: int, offset: int, offset_loc=3, count_loc=2, sep="&"):
     url_suffix_ls = url_suffix.split(sep) # Split url into list
     url_suffix_ls[offset_loc] = url_suffix_ls[offset_loc][0:url_suffix_ls[offset_loc].find('=')+1] + str(offset) # Modify offset
     url_suffix_ls[count_loc] = url_suffix_ls[count_loc][0:url_suffix_ls[count_loc].find('=')+1] + str(total-offset) # Modify count
@@ -279,7 +307,7 @@ def get_NCI_SEER_API_link_last(url_suffix: str(), total: int(), offset: int(), o
         - payload: Python dictionary containing data from JSON file
         - get: list of data
 '''
-def get_NCI_SEER_API_results(payload: dict(), get: list()):
+def get_NCI_SEER_API_results(payload: dict, get: list):
     
     # Fill output data frame with "get" values within "results"
     df = pd.DataFrame(columns=get)
@@ -299,7 +327,6 @@ def get_NCI_SEER_API_results(payload: dict(), get: list()):
     return df
 
 # Main Methods
-
 ''' get_NCI_SEER_API_disease: Obtain specified data encoded in JSON files from NCI SEER API
         - url_prefix: prefix for database
         - url_suffix: suffix for specific JSON file
@@ -307,7 +334,7 @@ def get_NCI_SEER_API_results(payload: dict(), get: list()):
         - get: list of data
     Dependencies: get_NCI_SEER_API_payload, get_NCI_SEER_API_link, get_NCI_SEER_API_link_last, get_NCI_SEER_API_results
 '''
-def get_NCI_SEER_API_disease(url_prefix: str(), url_suffix: str(), key: str(), get: list()):
+def get_NCI_SEER_API_disease(url_prefix: str, url_suffix: str, key: str, get: list):
     
     # Makes Python dictionary from the JSON file encoded in the url.
     payload = get_NCI_SEER_API_payload(url_prefix=url_prefix, url_suffix=url_suffix, key=key)

@@ -28,7 +28,7 @@ from ..gen import tidy as t
 
 
 # HTML Methods
-def get_html(url: str,file=None,dir=None):
+def get_html(url: str, file:str=None, dir:str=None):
     ''' 
     get_html(): obtains html file from the internet
     
