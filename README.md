@@ -39,10 +39,10 @@
 4. Make environment: write the following in a command line terminal...
     ```shell
     cd ~
-    conda create --name pyMUZ_env python=3.11.5
+    conda create --name pyMUZ python=3.11.5
     # When conda asks you to proceed, type "y" 
     
-    conda activate pyMUZ_env
+    conda activate pyMUZ
     mkdir git
     cd git
     ```
@@ -81,7 +81,7 @@
     ```shell
     cd ~
     cd git
-    conda activate pyMUZ_env
+    conda activate pyMUZ
     pip uninstall pyMUZ
     # Enter 'Y' when prompted
     
